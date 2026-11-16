@@ -154,7 +154,8 @@
       <div class="font-display font-bold leading-tight">PC101 Exam Lab</div>
       <div class="text-xs muted leading-tight">Organic Chemistry (1) · Dr. Samar Mohamed</div>
     </div>
-    <button id="searchBtn" type="button" class="ml-auto w-10 h-10 rounded-lg grid place-items-center text-lg" style="background:var(--panel2);border:1px solid var(--line)" aria-label="Search questions" title="دوّر على سؤال">🔎</button>
+    <button id="navHome" type="button" class="hidden ml-auto h-10 px-3 rounded-lg items-center gap-1.5 text-sm font-semibold" style="background:var(--panel2);border:1px solid var(--line)" aria-label="Home" title="الشاشة الرئيسية">🏠 <span class="ar hidden sm:inline">الرئيسية</span></button>
+    <button id="searchBtn" type="button" class="w-10 h-10 rounded-lg grid place-items-center text-lg" style="background:var(--panel2);border:1px solid var(--line)" aria-label="Search questions" title="دوّر على سؤال">🔎</button>
     <button id="soundBtn" type="button" class="w-10 h-10 rounded-lg grid place-items-center text-lg" style="background:var(--panel2);border:1px solid var(--line)" aria-label="Sound on/off" title="Sound on/off">🔊</button>
   </div>
 </header>
@@ -250,6 +251,17 @@
   </div>
   <div class="text-center mt-6"><button id="resetBtn" type="button" class="ar text-sm muted underline underline-offset-4">🔄 ابدأ من الأول</button></div>
 </section>
+<div id="homeBox" class="hidden fixed inset-0 z-50 grid place-items-center p-4" style="background:var(--overlay)">
+  <div class="panel w-full max-w-sm p-6 text-center pop">
+    <div class="text-4xl">🏠</div>
+    <div class="ar font-bold text-lg mt-2">ترجع للشاشة الرئيسية؟</div>
+    <p class="ar text-sm muted mt-2 leading-relaxed">الامتحان ده هيتقفل ومش هيتسجل كنتيجة.</p>
+    <div class="grid grid-cols-2 gap-3 mt-5">
+      <button id="homeNo" type="button" class="btn btn-ghost ar">لا، هكمّل</button>
+      <button id="homeYes" type="button" class="btn btn-acc ar">أيوه، ارجع</button>
+    </div>
+  </div>
+</div>
 <div id="resetBox" class="hidden fixed inset-0 z-50 grid place-items-center p-4" style="background:var(--overlay)">
   <div class="panel w-full max-w-sm p-6 text-center pop">
     <div class="text-4xl">🔄</div>
@@ -283,6 +295,7 @@
 
 <section id="view-exam" class="hidden-view">
   <div class="max-w-3xl mx-auto">
+    <div class="hidden"><button id="homeBtn" type="button" class="btn btn-ghost text-sm py-2 px-4">🏠 <span class="ar">الرئيسية</span></button></div>
     <div class="grid grid-cols-4 gap-2 sm:gap-3 mb-3">
       <div class="panel2 px-3 py-2"><div class="label">Question</div><div class="font-mono text-xl sm:text-2xl font-bold"><span id="qNum">1</span><span class="muted text-base">/<span id="qTotal">10</span></span></div></div>
       <div class="panel2 px-3 py-2"><div class="label">Score</div><div class="font-mono text-xl sm:text-2xl font-bold" style="color:var(--acc)" id="liveScore">0</div></div>
@@ -610,6 +623,7 @@ function showView(name) {
   document.body.classList.toggle('islamic', name === 'dua');
   if (name === 'dua') islamicDecor(); else if (wasIslamic) applyTheme();
   if (window.inloEvt) inloEvt('view', name);
+  { const nh = $('navHome'); nh.classList.toggle('hidden', name === 'setup' || name === 'admin'); nh.classList.toggle('flex', name !== 'setup' && name !== 'admin'); }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 let toastT = null;
@@ -1173,6 +1187,12 @@ $('adminLogout').onclick = async () => {
   showView('setup'); renderSetup();
 };
 
+$('homeBtn').onclick = () => { if (exam && exam.answers && exam.answers.length) $('homeBox').classList.remove('hidden'); else goHome(); };
+function goHome() { $('homeBox').classList.add('hidden'); clearInterval(timerInt); if (exam) exam.done = true; showView('setup'); renderSetup(); }
+$('navHome').onclick = () => { if (!$('view-exam').classList.contains('hidden-view')) $('homeBtn').click(); else goHome(); };
+$('homeNo').onclick = () => $('homeBox').classList.add('hidden');
+$('homeYes').onclick = goHome;
+$('homeBox').addEventListener('click', (e) => { if (e.target === $('homeBox')) $('homeBox').classList.add('hidden'); });
 $('resetBtn').onclick = () => $('resetBox').classList.remove('hidden');
 $('resetNo').onclick = () => $('resetBox').classList.add('hidden');
 $('resetBox').addEventListener('click', (e) => { if (e.target === $('resetBox')) $('resetBox').classList.add('hidden'); });
