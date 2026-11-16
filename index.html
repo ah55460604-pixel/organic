@@ -86,6 +86,13 @@
   .gchip:hover { border-color: var(--acc); }
   .gchip.on { background: var(--acc); color: var(--accInk); border-color: var(--acc); }
   html, body { background: var(--bg); color: var(--text); }
+  @media (max-width: 480px) {
+    header .h-16 { gap: 8px; }
+    header #logo { width: 38px; height: 38px; }
+    header #soundBtn, header #searchBtn { width: 36px; height: 36px; font-size: 16px; }
+    header #navHome { height: 36px; padding: 0 9px; }
+    #view-exam .label { font-size: 15px; }
+  }
   body {
     background-image:
       radial-gradient(900px 500px at 85% -10%, var(--glow1), transparent 60%),
@@ -151,8 +158,8 @@
       <span class="absolute -bottom-1.5 -right-1.5 font-mono text-[9px] px-1 rounded" style="background:var(--acc);color:var(--accInk)">101</span>
     </div>
     <div>
-      <div class="font-display font-bold leading-tight">PC101 Exam Lab</div>
-      <div class="text-xs muted leading-tight">Organic Chemistry (1) · Dr. Samar Mohamed</div>
+      <div class="font-display font-bold leading-tight whitespace-nowrap">PC101 Exam Lab</div>
+      <div class="text-xs muted leading-tight truncate">Organic Chemistry (1)<span class="hidden sm:inline"> · Dr. Samar Mohamed</span></div>
     </div>
     <button id="navHome" type="button" class="hidden ml-auto h-10 px-3 rounded-lg items-center gap-1.5 text-sm font-semibold" style="background:var(--panel2);border:1px solid var(--line)" aria-label="Home" title="الشاشة الرئيسية">🏠 <span class="ar hidden sm:inline">الرئيسية</span></button>
     <button id="searchBtn" type="button" class="w-10 h-10 rounded-lg grid place-items-center text-lg" style="background:var(--panel2);border:1px solid var(--line)" aria-label="Search questions" title="دوّر على سؤال">🔎</button>
@@ -1187,6 +1194,7 @@ $('adminLogout').onclick = async () => {
   showView('setup'); renderSetup();
 };
 
+['homeBox', 'resetBox'].forEach(id => { const el = $(id); if (el) document.body.appendChild(el); });
 $('homeBtn').onclick = () => { if (exam && exam.answers && exam.answers.length) $('homeBox').classList.remove('hidden'); else goHome(); };
 function goHome() { $('homeBox').classList.add('hidden'); clearInterval(timerInt); if (exam) exam.done = true; showView('setup'); renderSetup(); }
 $('navHome').onclick = () => { if (!$('view-exam').classList.contains('hidden-view')) $('homeBtn').click(); else goHome(); };
@@ -1263,6 +1271,7 @@ flushPending();
   #inlo .i-bub.r { transform-origin: bottom right; }
   #inlo .i-bub.below { bottom: auto; top: calc(100% + 6px); transform-origin: top left; } #inlo .i-bub.below.r { transform-origin: top right; }
   #inlo .i-bub.on { opacity: 1; visibility: visible; transform: none; filter: none; transition-delay: 0s; }
+  #inlo .i-bub { pointer-events: none; } #inlo .i-bub.busy { pointer-events: auto; }
   #inlo .i-txt { animation: iTxt .35s ease; }
   #inlo .i-bs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
   #inlo .i-b { padding: 3px 11px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--panel2); color: var(--text); font-size: 13px; font-weight: 700; font-family: 'Cairo', sans-serif; transition: border-color .2s, transform .2s; }
@@ -1693,6 +1702,7 @@ flushPending();
     BUB.innerHTML = `<div class="i-txt">${html}</div>`
       + (opt.btns ? `<div class="i-bs">${opt.btns.map((b, i) => `<button type="button" class="i-b" data-i="${i}">${b.t}</button>`).join('')}</div>` : '');
     st.busy = !!opt.btns;
+    BUB.classList.toggle('busy', st.busy);
     BUB.querySelectorAll('.i-b').forEach(el => el.onclick = (e) => { e.stopPropagation(); const b = opt.btns[+el.dataset.i]; hide(); if (b.fn) b.fn(); });
     fitBubble(); BUB.classList.add('on');
     if (!st.busy) st.bubT = setTimeout(hide, opt.ms || Math.min(7500, 2600 + html.replace(/<[^>]+>/g, '').length * 45));
@@ -1922,6 +1932,7 @@ flushPending();
   window.inloEvt = function (type, d) {
     if (type === 'view') {
       if (d !== 'exam') setProctor(false);
+      if (st.busy) hide();
       IN.classList.toggle('away', d === 'dua' || d === 'admin' || !!st.hidden);
       if (d === 'dua' || d === 'admin') hide();
       st.nextRoam = now() + 650; st.setupNag = false;
