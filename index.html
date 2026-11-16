@@ -1090,7 +1090,7 @@ function finishExam() {
   SFX.play(pct >= 85 ? 'fanfare' : 'done');
   if (window.inloEvt) inloEvt('finish', { pct, wrong: wrong.length, retry: exam.isRetry });
   if (pct === 100) confetti(fullBank ? 90 : 45);
-  if (!exam.isRetry) saveResult({ studentName: setup.name ? `${setup.name.slice(0, 40)} · ${SID}` : SID, gender: setup.gender || 'none', scope: setup.mode === 'sim' ? 'SIM' : setup.scope, scopeLabel: modeLabel,
+  if (!exam.isRetry) saveResult({ studentName: SID, ...(setup.name ? { name: setup.name.slice(0, 40) } : {}), gender: setup.gender || 'none', scope: setup.mode === 'sim' ? 'SIM' : setup.scope, scopeLabel: modeLabel,
     difficulty: (setup.mode === 'custom' || setup.mode === 'mcq') ? setup.diff : 'mixed', score: exam.score, total, percentage: pct, durationSec: dur });
 }
 $('retryWrongBtn').onclick = () => { if (exam && exam.wrong && exam.wrong.length) startExam(exam.wrong); };
@@ -1150,7 +1150,7 @@ function openAdmin() {
     load(); const on = e => { if (e.key === LOCAL_KEY) load(); }; window.addEventListener('storage', on); adminUnsub = () => window.removeEventListener('storage', on);
   }
 }
-const nameOf = (r) => { const s = String(r.studentName || ''); const i = s.indexOf(' · Student-'); return i > 0 ? s.slice(0, i) : ''; };
+const nameOf = (r) => { if (r.name) return String(r.name); const s = String(r.studentName || ''); const i = s.indexOf(' · Student-'); return i > 0 ? s.slice(0, i) : ''; };
 const idOf = (r) => { const s = String(r.studentName || ''); const m = s.match(/Student-[A-Z0-9]{4}/); return m ? m[0] : 'Unknown'; };
 const genOf = (r) => r.gender === 'boy' || r.gender === 'girl' ? r.gender : 'none';
 const GEN_LABEL = { boy: '👦 Boy', girl: '👧 Girl', none: '<span class="muted">—</span>' };
