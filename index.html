@@ -393,6 +393,11 @@
       <button id="adminLogout" class="btn btn-acc text-sm py-2">Lock &amp; exit</button>
     </div>
   </div>
+  <div class="grid grid-cols-3 gap-3 mb-3">
+    <div class="panel2 p-4"><div class="label">👀 Visits</div><div class="font-mono text-3xl font-bold" style="color:var(--acc)" id="stVisits">–</div><div class="text-xs muted">times the site was opened</div></div>
+    <div class="panel2 p-4"><div class="label">📱 Visitors</div><div class="font-mono text-3xl font-bold" style="color:var(--acc)" id="stVisitors">–</div><div class="text-xs muted">unique devices</div></div>
+    <div class="panel2 p-4"><div class="label">📅 Today</div><div class="font-mono text-3xl font-bold" style="color:var(--acc)" id="stVisitsToday">–</div><div class="text-xs muted" id="stVisitorsToday">visits today</div></div>
+  </div>
   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
     <div class="panel2 p-4"><div class="label">Test-takers</div><div class="font-mono text-3xl font-bold" id="stTakers">0</div><div class="text-xs muted">unique students/devices</div></div>
     <div class="panel2 p-4"><div class="label">Attempts</div><div class="font-mono text-3xl font-bold" id="stAttempts">0</div><div class="text-xs muted">exams submitted</div></div>
@@ -406,13 +411,13 @@
   </div>
   <div class="panel overflow-hidden">
     <div class="p-4 border-b flex flex-wrap gap-3 items-center justify-between" style="border-color:var(--line)">
-      <input id="adminSearch" placeholder="Search by name or student ID…" class="px-3 py-2 text-sm w-full sm:w-72">
+      <input id="adminSearch" placeholder="Search by student ID…" class="px-3 py-2 text-sm w-full sm:w-72">
       <div class="flex items-center gap-2 text-xs muted"><span class="w-2 h-2 rounded-full animate-pulse" style="background:var(--acc)"></span> Live updates</div>
     </div>
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead class="text-left label"><tr>
-          <th class="px-4 py-3">#</th><th class="px-4 py-3">Name</th><th class="px-4 py-3">Student ID</th><th class="px-4 py-3">Gender</th><th class="px-4 py-3">Date &amp; time</th>
+          <th class="px-4 py-3">#</th><th class="px-4 py-3">Student ID</th><th class="px-4 py-3">Gender</th><th class="px-4 py-3">Date &amp; time</th>
           <th class="px-4 py-3">Lecture</th><th class="px-4 py-3">Difficulty</th><th class="px-4 py-3 text-right">Score</th><th class="px-4 py-3 text-right">%</th>
         </tr></thead>
         <tbody id="adminRows"></tbody>
@@ -775,6 +780,34 @@ function studentId() {
   try { let id = localStorage.getItem('orgc_sid'); if (!id) { id = make(); localStorage.setItem('orgc_sid', id); } return id; } catch { return make(); }
 }
 const SID = studentId();
+const VISITS = "organic_visits", VISIT_KEY = 'orgc_vid';
+function visitorId() {
+  try { let v = localStorage.getItem(VISIT_KEY); if (!v) { v = Date.now().toString(36) + Math.random().toString(36).slice(2, 10); localStorage.setItem(VISIT_KEY, v); } return v; }
+  catch { return 'x' + Math.random().toString(36).slice(2, 10); }
+}
+function logVisit() {
+  try { if (sessionStorage.getItem('orgc_visited')) return; sessionStorage.setItem('orgc_visited', '1'); } catch {}
+  const rec = { vid: visitorId() };
+  if (FB_ENABLED && db) db.collection(VISITS).add({ ...rec, timestamp: firebase.firestore.FieldValue.serverTimestamp() }).catch(() => {});
+  else { const arr = lsGet('orgc_visits'); arr.push({ ...rec, timestamp: new Date().toISOString() }); lsSet('orgc_visits', arr.slice(-5000)); }
+}
+let visitsUnsub = null;
+function renderVisits(list) {
+  const day = new Date().toDateString(), today = list.filter(v => v.ts.toDateString() === day);
+  $('stVisits').textContent = list.length; $('stVisitors').textContent = new Set(list.map(v => v.vid)).size;
+  $('stVisitsToday').textContent = today.length; $('stVisitorsToday').textContent = `${new Set(today.map(v => v.vid)).size} visitors today`;
+}
+function watchVisits() {
+  if (visitsUnsub) return;
+  if (FB_ENABLED && db) {
+    visitsUnsub = db.collection(VISITS).onSnapshot(snap => {
+      renderVisits(snap.docs.map(d => { const x = d.data(); return { vid: x.vid, ts: x.timestamp?.toDate ? x.timestamp.toDate() : new Date() }; }));
+    }, () => { $('stVisits').textContent = '🔒'; $('stVisitors').textContent = '🔒'; $('stVisitsToday').textContent = '🔒'; });
+  } else {
+    const load = () => renderVisits(lsGet('orgc_visits').map(v => ({ vid: v.vid, ts: new Date(v.timestamp) })));
+    load(); const on = e => { if (e.key === 'orgc_visits') load(); }; window.addEventListener('storage', on); visitsUnsub = () => window.removeEventListener('storage', on);
+  }
+}
 
 const setup = { name: '', gender: '', scope: 'ALL', count: 10, diff: 'medium', source: 'mix', mode: 'custom' };
 try { setup.source = localStorage.getItem('orgc_source') === 'bank' ? 'bank' : 'mix'; } catch {}
@@ -1161,7 +1194,7 @@ function finishExam() {
   SFX.play(pct >= 85 ? 'fanfare' : 'done');
   if (window.inloEvt) inloEvt('finish', { pct, wrong: wrong.length, retry: exam.isRetry });
   if (pct === 100) confetti(fullBank ? 90 : 45);
-  if (!exam.isRetry) saveResult({ studentName: SID, ...(setup.name ? { name: setup.name.slice(0, 40) } : {}), gender: setup.gender || 'none', scope: setup.mode === 'sim' ? 'SIM' : setup.scope, scopeLabel: modeLabel,
+  if (!exam.isRetry) saveResult({ studentName: SID, gender: setup.gender || 'none', scope: setup.mode === 'sim' ? 'SIM' : setup.scope, scopeLabel: modeLabel,
     difficulty: (setup.mode === 'custom' || setup.mode === 'mcq' || setup.mode === 'qb') ? setup.diff : 'mixed', score: exam.score, total, percentage: pct, durationSec: dur });
 }
 $('retryWrongBtn').onclick = () => { if (exam && exam.wrong && exam.wrong.length) startExam(exam.wrong); };
@@ -1208,7 +1241,7 @@ $('codeGo').onclick = async () => {
 if (location.hash === '#admin') { history.replaceState(null, '', location.pathname + location.search); setTimeout(openCodeBox, 300); }
 
 function openAdmin() {
-  showView('admin');
+  showView('admin'); watchVisits();
   $('adminMode').textContent = FB_ENABLED && db ? 'Connected to Firebase — results appear in real time.' : 'Demo mode — showing results stored in this browser only.';
   if (adminUnsub) return;
   if (FB_ENABLED && db) {
@@ -1227,7 +1260,7 @@ const genOf = (r) => r.gender === 'boy' || r.gender === 'girl' ? r.gender : 'non
 const GEN_LABEL = { boy: '👦 Boy', girl: '👧 Girl', none: '<span class="muted">—</span>' };
 function renderAdmin() {
   const term = $('adminSearch').value.trim().toLowerCase();
-  const rows = adminRows.filter(r => !term || idOf(r).toLowerCase().includes(term) || nameOf(r).toLowerCase().includes(term));
+  const rows = adminRows.filter(r => !term || idOf(r).toLowerCase().includes(term));
   const latest = new Map(); adminRows.forEach(r => { if (!latest.has(idOf(r))) latest.set(idOf(r), genOf(r)); });
   const cnt = { boy: 0, girl: 0, none: 0 }, att = { boy: 0, girl: 0, none: 0 };
   latest.forEach(g => cnt[g]++); adminRows.forEach(r => att[genOf(r)]++);
@@ -1239,7 +1272,7 @@ function renderAdmin() {
   $('adminEmpty').classList.toggle('hidden', rows.length > 0);
   $('adminRows').innerHTML = rows.map((r, i) => { const p = +r.percentage || 0;
     return `<tr class="border-t">
-      <td class="px-4 py-3 muted font-mono">${i + 1}</td><td class="px-4 py-3 font-semibold" dir="auto">${nameOf(r) ? esc(nameOf(r)) : '<span class="muted">—</span>'}</td><td class="px-4 py-3 font-mono muted">${esc(idOf(r))}</td><td class="px-4 py-3">${GEN_LABEL[genOf(r)]}</td>
+      <td class="px-4 py-3 muted font-mono">${i + 1}</td><td class="px-4 py-3 font-semibold font-mono">${esc(idOf(r))}</td><td class="px-4 py-3">${GEN_LABEL[genOf(r)]}</td>
       <td class="px-4 py-3 muted whitespace-nowrap">${esc(r.ts.toLocaleString())}</td><td class="px-4 py-3">${esc(r.scopeLabel || r.scope)}</td>
       <td class="px-4 py-3">${esc(diffLabel(r.difficulty))}</td><td class="px-4 py-3 text-right font-mono">${esc(r.score)}/${esc(r.total)}</td>
       <td class="px-4 py-3 text-right font-mono" style="color:${p >= 75 ? 'var(--acc)' : p >= 50 ? 'var(--amber)' : 'var(--rose)'}">${p}%</td></tr>`; }).join('');
@@ -1247,17 +1280,19 @@ function renderAdmin() {
 $('adminSearch').addEventListener('input', renderAdmin);
 $('exportCsv').onclick = () => {
   const cell = (v) => { let s = String(v ?? ''); if (/^[=+\-@]/.test(s)) s = "'" + s; return `"${s.replace(/"/g, '""')}"`; };
-  const lines = [['Name','Student ID','Gender','Date','Lecture','Difficulty','Score','Total','Percentage','Duration (s)'].map(cell).join(',')]
-    .concat(adminRows.map(r => [nameOf(r), idOf(r), genOf(r), r.ts.toISOString(), r.scopeLabel || r.scope, diffLabel(r.difficulty), r.score, r.total, r.percentage, r.durationSec].map(cell).join(',')));
+  const lines = [['Student ID','Gender','Date','Lecture','Difficulty','Score','Total','Percentage','Duration (s)'].map(cell).join(',')]
+    .concat(adminRows.map(r => [idOf(r), genOf(r), r.ts.toISOString(), r.scopeLabel || r.scope, diffLabel(r.difficulty), r.score, r.total, r.percentage, r.durationSec].map(cell).join(',')));
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' }));
   a.download = `organic_results_${new Date().toISOString().slice(0, 10)}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 };
 $('adminLogout').onclick = async () => {
   if (typeof adminUnsub === 'function') adminUnsub(); adminUnsub = null; adminRows = []; adminUnlocked = false; $('adminRows').innerHTML = '';
+  if (typeof visitsUnsub === 'function') visitsUnsub(); visitsUnsub = null;
   if (FB_ENABLED && auth) { try { await auth.signOut(); } catch {} }
   showView('setup'); renderSetup();
 };
 
+logVisit();
 ['homeBox', 'resetBox'].forEach(id => { const el = $(id); if (el) document.body.appendChild(el); });
 $('homeBtn').onclick = () => { if (exam && exam.answers && exam.answers.length) $('homeBox').classList.remove('hidden'); else goHome(); };
 function goHome() { $('homeBox').classList.add('hidden'); clearInterval(timerInt); if (exam) exam.done = true; showView('setup'); renderSetup(); }
@@ -1269,7 +1304,7 @@ $('resetBtn').onclick = () => $('resetBox').classList.remove('hidden');
 $('resetNo').onclick = () => $('resetBox').classList.add('hidden');
 $('resetBox').addEventListener('click', (e) => { if (e.target === $('resetBox')) $('resetBox').classList.add('hidden'); });
 $('resetYes').onclick = () => {
-  try { Object.keys(localStorage).filter(k => k.startsWith('orgc_') && k !== PENDING_KEY).forEach(k => localStorage.removeItem(k)); } catch {}
+  try { Object.keys(localStorage).filter(k => k.startsWith('orgc_') && k !== PENDING_KEY && k !== VISIT_KEY && k !== 'orgc_visits').forEach(k => localStorage.removeItem(k)); } catch {}
   try { sessionStorage.clear(); } catch {}
   location.replace(location.pathname);
 };
