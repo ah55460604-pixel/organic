@@ -6,7 +6,7 @@
 <title>PC101 Exam Lab</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Caveat:wght@600;700&family=IBM+Plex+Mono:wght@500;600;700&family=Patrick+Hand&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600&family=Cairo:wght@500;700&family=Amiri:wght@400;700&family=Quicksand:wght@500;600;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Caveat:wght@600;700&family=IBM+Plex+Mono:wght@500;600;700&family=Patrick+Hand&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600&family=Cairo:wght@500;700&family=Amiri:wght@400;700&family=Quicksand:wght@500;600;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 <script>
   if (window.tailwind) tailwind.config = { theme: { extend: { fontFamily: {
     display: ['Fraunces', 'Georgia', 'serif'], mono: ['"IBM Plex Mono"', 'monospace'],
@@ -1040,13 +1040,14 @@ function record(ok, extra) {
   $('nextBtn').textContent = exam.i === exam.qs.length - 1 ? 'Finish & see results →' : 'Next →';
   $('nextBtn').classList.remove('hidden'); $('nextBtn').focus();
 }
+const teachBtnHtml = () => window.orgyTeach ? '<button type="button" class="teach-btn" onclick="orgyTeach()"><span class="tb-chalk">✏️</span>مفهمتش؟ اشرحهالي على السبورة</button>' : '';
 function feedbackBox(ok, bodyHtml) {
   const n = setup.name, fb = $('feedback'), msg = pickOne(ok ? PRAISE : NUDGE)(n);
   const byInlo = !!(window.inloTalk && inloTalk(msg, ok));
   fb.className = 'mt-5 rounded-xl p-4 text-sm leading-relaxed fade';
   fb.style.background = ok ? 'var(--okBg)' : 'var(--badBg)';
   fb.style.border = `1px solid ${ok ? 'var(--okLine)' : 'var(--badLine)'}`;
-  fb.innerHTML = (byInlo ? '' : `<div class="ar text-lg font-bold mb-2" style="color:${ok ? 'var(--okText)' : 'var(--badText)'}">${esc(msg)}</div>`) + bodyHtml;
+  fb.innerHTML = (byInlo ? '' : `<div class="ar text-lg font-bold mb-2" style="color:${ok ? 'var(--okText)' : 'var(--badText)'}">${esc(msg)}</div>`) + bodyHtml + teachBtnHtml();
 }
 $('submitBtn').onclick = () => {
   if (exam.selected === null || exam.done) return;
@@ -1094,7 +1095,7 @@ function renderAnswered(j) {
   fb.className = 'mt-5 rounded-xl p-4 text-sm leading-relaxed fade';
   fb.style.background = a.ok ? 'var(--okBg)' : 'var(--badBg)'; fb.style.border = `1px solid ${a.ok ? 'var(--okLine)' : 'var(--badLine)'}`;
   fb.innerHTML = `<div class="ar font-bold mb-1" style="color:${a.ok ? 'var(--okText)' : 'var(--badText)'}">${a.ok ? '✓ جاوبته صح' : '✗ كانت إجابتك غلط'}</div>`
-    + (q.type === 'mcq' ? `${a.ok ? '' : `<div class="font-semibold mb-1">Correct answer: (${String.fromCharCode(65 + q.ans)}) ${esc(q.opts[q.ans])}</div>`}<div style="color:var(--soft)">${esc(q.e)}</div>` : '');
+    + (q.type === 'mcq' ? `${a.ok ? '' : `<div class="font-semibold mb-1">Correct answer: (${String.fromCharCode(65 + q.ans)}) ${esc(q.opts[q.ans])}</div>`}<div style="color:var(--soft)">${esc(q.e)}</div>` : '') + teachBtnHtml();
   $('submitBtn').classList.add('hidden'); $('revealBtn').classList.add('hidden');
   $('nextBtn').textContent = exam.reviewing ? 'Next →' : (exam.i === exam.qs.length - 1 ? 'Finish & see results →' : 'Next →');
   $('nextBtn').classList.remove('hidden');
@@ -1352,6 +1353,159 @@ flushPending();
   #inlo.look-girl .hh3, #inlo.look-girl .hh4 { fill: #ff4f8b; animation: hPop .6s cubic-bezier(.2,1.8,.4,1) both; }
   #inlo.look-girl .hh4 { animation-delay: .12s; }
   @keyframes hPop { 0% { transform: scale(.3) rotate(-30deg); } 100% { transform: none; } }
+  #inlo.talk .m-n, #inlo.talk .m-h, #inlo.talk .m-s { opacity: 0 !important; }
+  #inlo.talk .m-o { opacity: 1 !important; transform-box: fill-box; transform-origin: 50% 30%; transition: transform .07s linear; }
+  #inlo.teach .glasses { opacity: 1 !important; transform: none !important; }
+  #inlo.teach .prop-pen { opacity: 1 !important; }
+  #inlo.teach .glasses > path:nth-of-type(2) { fill: rgba(219,234,254,.32); stroke-width: 2.6; }
+  #inlo.teach .glasses > path:nth-of-type(4) { opacity: .95; }
+  #qText.tts-on { background: color-mix(in srgb, var(--acc) 11%, transparent); box-shadow: 0 0 0 6px color-mix(in srgb, var(--acc) 11%, transparent); border-radius: 10px; transition: background .3s, box-shadow .3s; }
+  #qOptions .opt.tts-on { box-shadow: 0 0 0 2px var(--acc), 0 0 22px color-mix(in srgb, var(--acc) 30%, transparent); transform: translateX(3px); transition: box-shadow .25s, transform .25s; }
+  #inloBub .tts-wave { display: inline-flex; gap: 2px; align-items: flex-end; height: 14px; margin-inline-end: 6px; vertical-align: -2px; }
+  #inloBub .tts-wave i { width: 3px; border-radius: 2px; background: var(--acc); animation: ttsW .9s ease-in-out infinite; }
+  #inloBub .tts-wave i:nth-child(2) { animation-delay: .15s; } #inloBub .tts-wave i:nth-child(3) { animation-delay: .3s; } #inloBub .tts-wave i:nth-child(4) { animation-delay: .45s; }
+  @keyframes ttsW { 0%,100% { height: 4px; } 50% { height: 14px; } }
+
+  #ttsSel { position: fixed; z-index: 90; display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px 8px 12px; border-radius: 999px;
+            font: 700 14px/1 'Cairo', system-ui, sans-serif; color: #fff; background: linear-gradient(135deg, var(--acc), color-mix(in srgb, var(--acc) 70%, #000));
+            box-shadow: 0 10px 26px -8px color-mix(in srgb, var(--acc) 70%, transparent), 0 2px 6px rgba(0,0,0,.18); border: 0; cursor: pointer;
+            opacity: 0; transform: translateY(6px) scale(.86); pointer-events: none; transition: opacity .18s ease, transform .28s cubic-bezier(.2,1.6,.4,1); -webkit-tap-highlight-color: transparent; }
+  #ttsSel.on { opacity: 1; transform: none; pointer-events: auto; }
+  #ttsSel:active { transform: scale(.94); }
+  #ttsSel .ts-ic { display: inline-flex; gap: 2px; align-items: flex-end; height: 13px; }
+  #ttsSel .ts-ic i { width: 3px; border-radius: 2px; background: #fff; animation: ttsW 1s ease-in-out infinite; }
+  #ttsSel .ts-ic i:nth-child(2) { animation-delay: .18s; } #ttsSel .ts-ic i:nth-child(3) { animation-delay: .36s; }
+
+  .teach-btn { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 9px 16px; border-radius: 999px; cursor: pointer;
+               font: 700 14px/1.2 'Cairo', system-ui, sans-serif; color: var(--acc); background: color-mix(in srgb, var(--acc) 9%, transparent);
+               border: 1.5px dashed color-mix(in srgb, var(--acc) 60%, transparent); transition: transform .25s cubic-bezier(.2,1.6,.4,1), background .2s, box-shadow .25s; }
+  .teach-btn:hover { transform: translateY(-2px) rotate(-1deg); background: color-mix(in srgb, var(--acc) 15%, transparent); box-shadow: 0 8px 20px -10px var(--acc); }
+  .teach-btn .tb-chalk { font-size: 17px; display: inline-block; animation: tbWig 2.6s ease-in-out infinite; }
+  @keyframes tbWig { 0%,80%,100% { transform: rotate(0); } 85% { transform: rotate(-14deg); } 90% { transform: rotate(10deg); } 95% { transform: rotate(-6deg); } }
+
+  body.tb-lock { overflow: hidden; }
+  body.tb-lock #madeBy, body.tb-lock #ttsSel:not(.on) { visibility: hidden; }
+  #tBoard { position: fixed; inset: 0; z-index: 72; overflow: hidden; display: grid; place-items: center; padding: 14px;
+            background: radial-gradient(120% 90% at 50% 0%, #e7ebf0, #cfd6df 70%, #c3ccd7); }
+  #tBoard .tb-frame { position: relative; width: min(1180px, 100%); height: min(860px, calc(100vh - 28px)); height: min(860px, calc(100dvh - 28px)); display: flex; flex-direction: column; border-radius: 20px;
+            background: linear-gradient(180deg, #fbfcfd, #f3f5f8); padding: 12px; box-shadow: 0 1px 0 #fff inset, 0 0 0 1px #aab4c1, 0 0 0 9px #dfe4ea, 0 0 0 10px #a9b3c0, 0 30px 60px -20px rgba(15,23,42,.45);
+            opacity: 0; transform: scale(.97) translateY(8px); transition: opacity .5s ease, transform .7s cubic-bezier(.2,1.1,.3,1); }
+  #tBoard.in .tb-frame { opacity: 1; transform: none; }
+  #tBoard.out .tb-frame { opacity: 0; transform: scale(.98); transition-duration: .3s; }
+  #tBoard .tb-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 2px 6px 10px; direction: rtl; }
+  #tBoard .tb-ttl { display: flex; align-items: center; gap: 10px; color: #1f2a44; font: 800 17px/1.15 'Cairo', sans-serif; }
+  #tBoard .tb-cap { font-size: 26px; filter: drop-shadow(0 3px 4px rgba(0,0,0,.15)); animation: tbCap 3s ease-in-out infinite; }
+  @keyframes tbCap { 50% { transform: rotate(-8deg) translateY(-2px); } }
+  #tBoard .tb-sub { display: block; font: 600 12px 'Cairo', sans-serif; color: #64748b; }
+  #tBoard .tb-tools { display: flex; align-items: center; gap: 6px; direction: ltr; }
+  #tBoard .tb-tools > button, #tBoard .tb-lg { height: 36px; min-width: 36px; border-radius: 11px; border: 1px solid #cdd5df; background: #fff; color: #1f2a44; font: 700 14px 'Cairo', sans-serif; cursor: pointer; box-shadow: 0 1px 0 #fff inset, 0 2px 5px -2px rgba(15,23,42,.2); transition: transform .15s, background .2s; }
+  #tBoard .tb-tools > button:hover { transform: translateY(-1px); }
+  #tBoard .tb-tools > button:active { transform: scale(.94); }
+  #tBoard .tb-snd.off { background: #f1f5f9; color: #94a3b8; }
+  #tBoard .tb-x { font-size: 16px; }
+  #tBoard .tb-lg { display: inline-flex; padding: 3px; gap: 2px; }
+  #tBoard .tb-lg button { border: 0; background: transparent; border-radius: 8px; padding: 0 10px; font: 800 13px 'Cairo', sans-serif; color: #64748b; cursor: pointer; transition: background .25s, color .25s; }
+  #tBoard .tb-lg button.on { background: #1f2a44; color: #fff; }
+  #tBoard .tb-board { position: relative; flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; border-radius: 12px; scroll-behavior: smooth;
+            background: radial-gradient(60% 40% at 78% 18%, rgba(148,163,184,.10), transparent 70%), radial-gradient(50% 35% at 18% 82%, rgba(148,163,184,.08), transparent 70%),
+                        radial-gradient(circle at 1px 1px, rgba(100,116,139,.13) 1px, transparent 1.4px) 0 0 / 26px 26px, #fefefe;
+            box-shadow: inset 0 0 0 1px #e2e8f0, inset 0 10px 30px -18px rgba(15,23,42,.18); }
+  #tBoard .tb-inner { position: relative; padding: 26px 34px 150px 210px; min-height: 100%; }
+  #tBoard .tb-step { position: relative; margin: 0 0 18px; opacity: 0; transform: translateY(6px); transition: opacity .35s ease, transform .5s cubic-bezier(.2,1,.3,1); }
+  #tBoard .tb-step.on { opacity: 1; transform: none; }
+  #tBoard .tw { display: inline-block; opacity: 0; transform: translateY(5px) rotate(-1.5deg); filter: blur(2px); transition: opacity .2s ease, transform .3s cubic-bezier(.2,1.4,.4,1), filter .25s ease; white-space: pre; }
+  #tBoard .tw.on { opacity: 1; transform: none; filter: none; }
+  #tBoard .tb-tx, #tBoard .tb-qt, #tBoard .tb-ans, #tBoard .tb-endq { font-family: 'Caveat', 'Aref Ruqaa', cursive; color: #1f2a44; }
+  #tBoard [dir="rtl"].tb-tx, #tBoard .tb-note .tb-tx { font-family: 'Caveat', 'Aref Ruqaa', 'Amiri', serif; font-size: 27px; line-height: 1.85; text-align: right; }
+  #tBoard [dir="ltr"].tb-tx { font-size: 30px; line-height: 1.5; text-align: left; }
+  #tBoard .lgrp { display: inline-block; unicode-bidi: isolate; }
+  #tBoard .tw.kw { color: #1d4ed8; font-weight: 700; }
+  #tBoard .tw.lt { font-size: 1.12em; }
+  #tBoard .tw.hl, #tBoard b.hl { background: linear-gradient(100deg, transparent 2%, rgba(255,224,0,.55) 6%, rgba(255,214,0,.45) 94%, transparent 98%); border-radius: 4px; padding: 0 2px; font-weight: 700; }
+  #tBoard .tb-tag { display: inline-block; font: 700 12.5px 'JetBrains Mono', monospace; color: #64748b; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 3px 9px; margin-bottom: 8px; }
+  #tBoard .tb-qt { font-size: 31px; line-height: 1.38; font-weight: 700; color: #0f172a; padding-bottom: 14px; border-bottom: 2px dashed #e2e8f0; }
+  #tBoard .tb-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #e03131; margin-inline-end: 10px; vertical-align: middle; box-shadow: 0 0 0 3px rgba(224,49,49,.15); }
+  #tBoard .tb-idea { display: flex; gap: 12px; align-items: flex-start; padding: 10px 16px; border-radius: 14px; background: rgba(250,204,21,.09); border: 2px solid rgba(234,179,8,.35); direction: rtl; }
+  #tBoard .tb-idea .tb-tx[dir="ltr"] { direction: ltr; }
+  #tBoard .tb-bulb { font-size: 30px; animation: tbBulb 2.4s ease-in-out infinite; }
+  @keyframes tbBulb { 50% { filter: drop-shadow(0 0 10px rgba(250,204,21,.9)); transform: scale(1.08); } }
+  #tBoard .tb-arr { width: 30px; height: 40px; margin: 2px auto; }
+  #tBoard .tb-arr svg { width: 100%; height: 100%; overflow: visible; }
+  #tBoard .tb-ans { font-size: 34px; color: #2b8a3e; font-weight: 700; padding: 6px 4px; }
+  #tBoard .tb-ans > div { margin: 4px 0; }
+  #tBoard .tb-tick { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #2b8a3e; color: #fff; font: 800 20px 'Cairo', sans-serif; margin-inline-end: 12px; vertical-align: middle; box-shadow: 0 6px 14px -6px #2b8a3e; animation: tbPop .55s cubic-bezier(.2,1.8,.4,1) both; }
+  #tBoard .tb-av { position: relative; display: inline-block; margin-inline-start: 16px; }
+  @keyframes tbPop { 0% { transform: scale(0) rotate(-40deg); } 100% { transform: none; } }
+  #tBoard .tb-note { position: relative; max-width: 620px; margin: 10px auto 10px 0; padding: 26px 26px 18px; background: linear-gradient(170deg, #fff7a8, #ffe867); color: #3f3a1a; border-radius: 2px 2px 18px 2px;
+            box-shadow: 0 18px 30px -18px rgba(120,90,0,.55), 0 2px 0 rgba(0,0,0,.04); transform: rotate(-1.6deg); }
+  #tBoard .k-trick.on .tb-note { animation: tbSlap .7s cubic-bezier(.2,1.5,.35,1) both; }
+  @keyframes tbSlap { 0% { opacity: 0; transform: rotate(-14deg) scale(1.35) translateY(-30px); } 60% { opacity: 1; transform: rotate(1deg) scale(.98); } 100% { transform: rotate(-1.6deg); } }
+  #tBoard .tb-tape { position: absolute; top: -12px; left: 50%; width: 110px; height: 26px; transform: translateX(-50%) rotate(2deg); background: rgba(255,255,255,.55); box-shadow: 0 1px 3px rgba(0,0,0,.12); border-left: 2px dotted rgba(0,0,0,.06); border-right: 2px dotted rgba(0,0,0,.06); }
+  #tBoard .tb-nh { font: 800 15px 'Cairo', sans-serif; color: #8a6d00; margin-bottom: 4px; }
+  #tBoard .tb-endq { font-family: 'Aref Ruqaa', 'Caveat', serif; font-size: 34px; text-align: center; margin-top: 10px; color: #1f2a44; }
+  #tBoard .tb-endb { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 14px; }
+  #tBoard .tb-endb button { font: 800 16px 'Cairo', sans-serif; padding: 12px 20px; border-radius: 14px; cursor: pointer; border: 0; transition: transform .2s cubic-bezier(.2,1.6,.4,1), box-shadow .2s; }
+  #tBoard .tb-endb button:hover { transform: translateY(-2px); }
+  #tBoard .tb-ok { background: #2b8a3e; color: #fff; box-shadow: 0 10px 20px -10px #2b8a3e; }
+  #tBoard .tb-again { background: #fff; color: #1f2a44; box-shadow: inset 0 0 0 2px #1f2a44; }
+  #tBoard .tb-swap { background: #eef2ff; color: #3730a3; }
+  #tBoard .tb-drawbox { display: flex; justify-content: center; padding: 6px 0 4px; }
+  #tBoard .tb-svg { width: 100%; height: auto; overflow: visible; }
+  #tBoard .tb-svg .d-s { fill: none; stroke: #1f2a44; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+  #tBoard .tb-svg .d-s.red { stroke: #e03131; } #tBoard .tb-svg .d-s.thin { stroke-width: 2.2; }
+  #tBoard .tb-svg .d-t { font: 700 30px 'Caveat', cursive; fill: #1f2a44; text-anchor: middle; dominant-baseline: central; opacity: 0; transform-box: fill-box; transform-origin: center; transform: scale(.6) translateY(6px); transition: opacity .25s ease, transform .4s cubic-bezier(.2,1.6,.4,1); }
+  #tBoard .tb-svg .d-t.on { opacity: 1; transform: none; }
+  #tBoard .tb-svg .d-t.big { font-size: 40px; } #tBoard .tb-svg .d-t.sm { font-size: 24px; } #tBoard .tb-svg .d-t.xs { font-size: 19px; }
+  #tBoard .tb-svg .d-t.blue { fill: #1d4ed8; } #tBoard .tb-svg .d-t.gray { fill: #64748b; } #tBoard .tb-svg .d-t.red { fill: #e03131; } #tBoard .tb-svg .d-t.green { fill: #2b8a3e; text-anchor: start; }
+  #tBoard .tb-svg .d-t.gone { opacity: 0 !important; transform: scale(1.6) rotate(20deg) !important; transition: opacity .3s, transform .4s; }
+  #tBoard .tb-svg .d-t.pop { animation: tbIn .6s cubic-bezier(.2,1.6,.4,1) both; }
+  @keyframes tbIn { 0% { opacity: 0; transform: scale(.4); } 100% { opacity: 1; transform: none; } }
+  #tBoard .tb-svg .d-t.q { animation: tbQ 1.4s ease-in-out infinite; }
+  @keyframes tbQ { 50% { transform: scale(1.12) rotate(-6deg); } }
+  #tBoard .tb-svg .sb { font-size: .68em; }
+  #tBoard .tb-svg .d-n { font: 800 18px 'JetBrains Mono', monospace; fill: #e03131; text-anchor: middle; opacity: 0; transform-box: fill-box; transform-origin: center; transform: scale(0); transition: opacity .2s, transform .45s cubic-bezier(.2,1.9,.4,1); }
+  #tBoard .tb-svg .d-n.on { opacity: 1; transform: none; }
+  #tBoard .tb-arr .d-s { fill: none; stroke: #e03131; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  #tBoard svg.tb-ov { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  #tBoard .ov-u { fill: none; stroke: #e03131; stroke-width: 3; stroke-linecap: round; opacity: .85; }
+  #tBoard .ov-o { fill: none; stroke: #2b8a3e; stroke-width: 3.2; stroke-linecap: round; }
+  #tBoard .tb-pen { position: absolute; left: 0; top: 0; width: 26px; height: 78px; margin: -78px 0 0 -4px; pointer-events: none; opacity: 0; z-index: 5;
+            transition: transform .2s cubic-bezier(.3,.7,.3,1), opacity .3s ease; transform-origin: 0 100%; filter: drop-shadow(4px 6px 5px rgba(15,23,42,.28)); }
+  #tBoard .tb-pen.on { opacity: 1; }
+  #tBoard .tb-pen svg { width: 100%; height: 100%; transform: rotate(28deg); transform-origin: 50% 100%; animation: tbScr .22s ease-in-out infinite alternate; }
+  @keyframes tbScr { from { transform: rotate(26deg) translate(-1px, 0); } to { transform: rotate(31deg) translate(1px, -1px); } }
+  #tBoard .tb-bar { display: flex; align-items: center; gap: 14px; padding: 10px 6px 2px; direction: ltr; }
+  #tBoard .tb-ctl { display: flex; gap: 6px; }
+  #tBoard .tb-ctl button, #tBoard .tb-rst { width: 42px; height: 42px; border-radius: 50%; border: 1px solid #cdd5df; background: #fff; color: #1f2a44; font: 800 15px system-ui, sans-serif; cursor: pointer; box-shadow: 0 2px 6px -2px rgba(15,23,42,.25); transition: transform .15s; }
+  #tBoard .tb-ctl .tb-play { width: 50px; height: 50px; margin-top: -4px; background: #1f2a44; color: #fff; border: 0; font-size: 16px; box-shadow: 0 10px 20px -10px #1f2a44; }
+  #tBoard .tb-ctl button:active, #tBoard .tb-rst:active { transform: scale(.92); }
+  #tBoard .tb-dots { flex: 1; display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap; }
+  #tBoard .tb-dots i { width: 9px; height: 9px; border-radius: 99px; background: #d5dbe3; transition: width .35s cubic-bezier(.2,1.4,.4,1), background .3s; }
+  #tBoard .tb-dots i.d { background: #94a3b8; }
+  #tBoard .tb-dots i.c { width: 26px; background: #1f2a44; }
+  #tBoard .tb-tray { position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%); width: 46%; height: 9px; border-radius: 0 0 6px 6px; background: linear-gradient(#b8c1cc, #9aa5b3); display: flex; align-items: flex-start; justify-content: center; gap: 16px; pointer-events: none; }
+  #tBoard .tb-tray i { width: 46px; height: 8px; margin-top: -5px; border-radius: 3px 6px 6px 3px; background: linear-gradient(90deg, #f8fafc 0 24%, var(--c) 24%); box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  #tBoard .tb-eraser { width: 40px; height: 11px; margin-top: -8px; border-radius: 3px; background: linear-gradient(#475569 0 50%, #e2e8f0 50%); box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  #tBoard .tb-toast { position: absolute; left: 50%; top: 66px; transform: translate(-50%, -10px); opacity: 0; pointer-events: none; background: #1f2a44; color: #fff; font: 700 13.5px 'Cairo', sans-serif; padding: 9px 16px; border-radius: 12px; direction: rtl; transition: opacity .3s, transform .4s cubic-bezier(.2,1.4,.4,1); max-width: 90%; text-align: center; box-shadow: 0 12px 24px -12px rgba(0,0,0,.5); }
+  #tBoard .tb-toast.on { opacity: 1; transform: translate(-50%, 0); }
+  @media (max-width: 759px) {
+    #tBoard { padding: 6px; }
+    #tBoard .tb-frame { height: calc(100vh - 12px); height: calc(100dvh - 12px); }
+    #tBoard .tb-frame { border-radius: 14px; padding: 8px; box-shadow: 0 0 0 1px #aab4c1, 0 0 0 5px #dfe4ea, 0 0 0 6px #a9b3c0, 0 20px 40px -20px rgba(15,23,42,.45); }
+    #tBoard .tb-inner { padding: 16px 16px 130px; }
+    #tBoard .tb-ttl { font-size: 15px; } #tBoard .tb-cap { font-size: 22px; }
+    #tBoard .tb-tools > button, #tBoard .tb-lg { height: 32px; min-width: 32px; }
+    #tBoard [dir="rtl"].tb-tx, #tBoard .tb-note .tb-tx { font-size: 22px; line-height: 1.8; }
+    #tBoard [dir="ltr"].tb-tx { font-size: 24px; }
+    #tBoard .tb-qt { font-size: 24px; }
+    #tBoard .tb-ans { font-size: 27px; }
+    #tBoard .tb-tick { width: 32px; height: 32px; font-size: 16px; }
+    #tBoard .tb-bar { padding-left: 74px; gap: 8px; }
+    #tBoard .tb-ctl button, #tBoard .tb-rst { width: 38px; height: 38px; }
+    #tBoard .tb-ctl .tb-play { width: 44px; height: 44px; }
+    #tBoard .tb-tray { display: none; }
+    #tBoard .tb-note { padding: 22px 16px 14px; }
+  }
   #inlo .i-act.jump  { animation: iJump .7s cubic-bezier(.3,0,.3,1); }
   #inlo .i-act.spin  { animation: iSpin .9s cubic-bezier(.55,0,.25,1); }
   #inlo .i-act.shake { animation: iShake .55s ease; }
@@ -1898,7 +2052,7 @@ flushPending();
     return w;
   }
   function openPanel(w, html) { w.querySelector('.ia-box').innerHTML = html; requestAnimationFrame(() => requestAnimationFrame(() => w.classList.add('open'))); setTimeout(() => { lookAt(w, 2000); const r = w.getBoundingClientRect(); if (r.bottom > innerHeight || r.top < 70) w.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 450); }
-  const proctorNo = () => { act('shake', 600); mood('serious'); say(`🤫 أنا مراقب دلوقتي… مفيش ترجمة ولا مساعدة<br>${G('ركّز', 'ركّزي')} في ورقتك 📝`, { ms: 3800 }); };
+  const proctorNo = () => { act('shake', 600); mood('serious'); say(`🤫 أنا مراقب دلوقتي… مفيش ترجمة ولا مساعدة… بس أقدر أقرالك السؤال 🔊<br>${G('ركّز', 'ركّزي')} في ورقتك 📝`, { ms: 3800 }); };
   function translateQ() {
     if (st.proctor) return proctorNo();
     const q = curQ(); if (!q || !q.qa) return say('مش لاقي ترجمة للسؤال ده 😅');
@@ -1917,7 +2071,7 @@ flushPending();
     }
     let h = `<div class="ia-h">📖 شرح أورجي</div>`;
     if (q.type === 'mcq') h += `<div class="ia-o" style="margin-bottom:4px"><b>✓</b>${esc(q.oaS ? q.oaS[q.ans] : '')}</div>`;
-    h += `<div class="ia-o">${esc(q.ea)}</div>`;
+    h += `<div class="ia-o">${esc(q.ea)}</div>` + teachBtnHtml();
     const w = panel(exam.done || exam.reviewing ? 'ex' : 'tr');
     if (!exam.done && $('inloTr') && $('inloTr').classList.contains('open') && w.id === 'inloTr') { w.classList.remove('open'); setTimeout(() => openPanel(w, h), 350); }
     else openPanel(w, h);
@@ -1927,6 +2081,7 @@ flushPending();
   function menu() {
     const v = view(), btns = [], q = curQ();
     if (v === 'exam' && q) {
+      btns.push({ t: '🔊 اقرالي السؤال', fn: readMenu });
       btns.push({ t: '🌐 ترجم السؤال', fn: translateQ });
       btns.push({ t: '📖 اشرحلي بالعربي', fn: () => explainQ() });
       if (!exam.done && !exam.reviewing && q.type === 'mcq') btns.push({ t: `🪄 شيل اختيار غلط (${st.hints})`, fn: hint });
@@ -1978,6 +2133,7 @@ flushPending();
              : `🎲 اخترتلك <b>${esc(s.label)}</b> — <span dir="ltr">${esc(s.sub)}</span><br>يلا بينا! 🚀`);
   }
   function sleep() {
+    if (VO.on) ttsStop(true);
     say('هنام شوية… لو احتجتني دوس عليّا 😴', { ms: 2000 });
     setTimeout(() => { st.sleep = true; ls('sleep', '1'); hide(); mood('sleep'); IN.classList.add('sleeping'); const h = home(); flyTo(h.x, h.y, { s: 1 }); }, 1500);
   }
@@ -1986,15 +2142,17 @@ flushPending();
     say(msg || `صحيت! ${G('وحشتني', 'وحشتيني')} 😃`); st.nextRoam = now() + 3500;
   }
   function onClick() {
+    if (st.teach) return teachToggle();
     st.clicks = st.clicks.filter(t => now() - t < 2500); st.clicks.push(now());
     if (st.clicks.length >= 6) { st.clicks = []; hide(); sfx('boing'); mood('dizzy', 2600); act('spin'); return setTimeout(() => say('دوّختني 😵‍💫 براحة عليّا!'), 550); }
     if (st.sleep) return wake();
+    if (VO.on) return ttsStop();
     if (BUB.classList.contains('on') && st.busy) return hide();
-    if (st.proctor) { act('shake', 500); return say(`🤫 أنا مراقب دلوقتي… مفيش ترجمة ولا مساعدة<br>${G('ركّز', 'ركّزي')} في ورقتك 📝`, { btns: [{ t: '😴 نام شوية', fn: sleep }, { t: '✖', fn: () => {} }] }); }
+    if (st.proctor) { act('shake', 500); return say(`🤫 أنا مراقب دلوقتي… مفيش ترجمة ولا مساعدة… بس أقدر أقرالك السؤال 🔊<br>${G('ركّز', 'ركّزي')} في ورقتك 📝`, { btns: [{ t: '🔊 اقرالي السؤال', fn: readMenu }, { t: '😴 نام شوية', fn: sleep }, { t: '✖', fn: () => {} }] }); }
     menu();
   }
 
-  SVG.addEventListener('pointerdown', (e) => { if (st.stage) return; st.down = { x: e.clientX, y: e.clientY, ox: E.x, oy: E.y, moved: false }; try { SVG.setPointerCapture(e.pointerId); } catch {} });
+  SVG.addEventListener('pointerdown', (e) => { if (st.stage || st.teach) return; st.down = { x: e.clientX, y: e.clientY, ox: E.x, oy: E.y, moved: false }; try { SVG.setPointerCapture(e.pointerId); } catch {} });
   SVG.addEventListener('pointermove', (e) => {
     if (!st.down) return;
     const dx = e.clientX - st.down.x, dy = e.clientY - st.down.y;
@@ -2028,8 +2186,681 @@ flushPending();
   });
   addEventListener('resize', () => { size(); if (st.stage) return placeOnSpot(); if (st.sleep) { const h = home(); flyTo(h.x, h.y, { dur: 500 }); } else st.nextRoam = 0; });
 
+  const SY = window.speechSynthesis || null;
+  const VO = { on: false, gen: 0, mt: null, ka: null, talking: false, rate: +(ls('rate') || .94), cps: { en: 14.5, ar: 12 } };
+  const pause_ = ms => new Promise(r => setTimeout(r, ms));
+  const VBAD = /zira|\bdavid\b|\bmark\b|\bhazel\b|\bgeorge\b|espeak|\bfred\b|albert|bad news|bells|boing|bubbles|cellos|jester|organ|trinoids|whisper|zarvox|superstar|wobble|junior|kathy|ralph|grandma|grandpa|eddy|\bflo\b|\breed\b|rocko|sandy|shelley|good news|pipe organ|hysterical/i;
+  const VMALE = /\b(andrew|brian|guy|christopher|eric|davis|jason|tony|roger|steffan|aaron|evan|nathan|tom|thomas|alex|daniel|arthur|oliver|ryan|ethan|william|liam|connor|james|rishi|gordon|lee|male|shakir|hamed|naayf|majed|maged|tarik|omar|rami|bassel|hamdan|taim|moaz|jamal|fahed|ali|saleh|laith|hamza|kareem|youssef)\b/i;
+  const VFEM = /\b(ava|emma|jenny|aria|michelle|samantha|allison|susan|zoe|serena|sonia|libby|nicky|ana|karen|moira|tessa|victoria|fiona|kate|ashley|cora|elizabeth|jane|nancy|sara|amber|natasha|clara|emily|martha|maisie|mia|molly|hollie|female|salma|zariyah|hoda|laila|layla|mariam|amina|fatima|sana|noura|aysha|rana|iman|amany|hala|mouna|reem|amal|google us english|google العربية)\b/i;
+  const vGender = v => VFEM.test(v.name) ? 'f' : VMALE.test(v.name) ? 'm' : '';
+  const wantG = () => setup && setup.gender === 'girl' ? 'f' : 'm';
+  function langV(lang) { return SY ? SY.getVoices().filter(v => new RegExp('^' + lang + '([-_]|$)', 'i').test(v.lang)) : []; }
+  function vScore(v, g) {
+    const n = v.name; let x = 0;
+    if (/natural|neural/i.test(n)) x += 40;
+    if (/premium|enhanced|siri/i.test(n)) x += 30;
+    if (/online/i.test(n)) x += 8;
+    if (/google/i.test(n)) x += 18;
+    if (VBAD.test(n)) x -= 80;
+    if (/en[-_]US/i.test(v.lang)) x += 6; else if (/en[-_]GB/i.test(v.lang)) x += 4;
+    if (/ar[-_]EG/i.test(v.lang)) x += 12; else if (/ar[-_]SA/i.test(v.lang)) x += 4;
+    if (!v.localService) x += 2;
+    const vg = vGender(v);
+    if (vg === g) x += 50; else if (vg) x -= 45;
+    return x;
+  }
+  function rankV(lang) { const g = wantG(); return langV(lang).sort((a, b) => vScore(b, g) - vScore(a, g)); }
+  function pickV(lang) {
+    const all = rankV(lang); if (!all.length) return null;
+    const sv = ls(`v_${lang}_${wantG()}`);
+    return all.find(v => v.voiceURI === sv) || all[0];
+  }
+  function pitchFor(v) { const g = wantG(), vg = vGender(v); return vg && vg !== g ? (g === 'm' ? .8 : 1.17) : 1; }
+  if (SY) { try { SY.getVoices(); SY.addEventListener('voiceschanged', () => {}); } catch {} }
+
+  const ELN = { Cl: 'C L', Br: 'B R', Mg: 'M G', Na: 'N A', Ni: 'nickel', Hg: 'mercury', Zn: 'zinc', Ag: 'silver' };
+  function isFormula(t) {
+    return /[A-Z]/.test(t) && !/[a-z]{2}/.test(t) && (/[A-Z][a-z]?\d/.test(t) || /[A-Z][a-z]?[A-Z]/.test(t) || /[=≡]/.test(t) || /^[A-Z][a-z]?[+−]$/.test(t));
+  }
+  function readFormula(t) {
+    const out = [];
+    t.replace(/\)(\d+)/g, ')×$1').replace(/×(\d+)|(Cl|Br|Mg|Na|Ni|Hg|Zn|Ag|Mn|[A-Z])(\d*)|([a-z])(\d*)|(=)|(≡)|([–-])|(\()|(\))|(\+)|(−)|(\d+)/g,
+      (m, tm, el, n, lc, ln, eq, tr, da, op, cp, pl, mi, dg) => {
+        if (tm) out.push(tm + ' times,');
+        else if (el) { if (el === 'C' && out.length && !/bond$|with$|,$/.test(out[out.length - 1])) out.push(','); out.push((ELN[el] || el.toUpperCase().split('').join(' ')) + (n ? ' ' + n : '')); }
+        else if (lc) out.push(lc + (ln ? ' ' + ln : ''));
+        else if (eq) out.push('double bond');
+        else if (tr) out.push('triple bond');
+        else if (op) out.push(', with');
+        else if (da || cp) out.push(',');
+        else if (pl) out.push('plus');
+        else if (mi) out.push('minus');
+        else if (dg) out.push(dg);
+        return m;
+      });
+    return out.join(' ').replace(/\s+,/g, ',').replace(/,(\s*,)+/g, ',').replace(/^,\s*|,\s*$/g, '').replace(/^with\s*/, '');
+  }
+  const PFX = /(di|tri)?(bromo|chloro|iodo|fluoro|methyl|ethyl|propyl|ethoxy|methoxy|cyclo|halo(?=alk))(?=[a-z]{3})/gi;
+  function readName(t) {
+    return t.replace(/(\d),(\d)/g, '$1 $2').replace(/-/g, ' ').replace(PFX, '$& ')
+      .replace(/\bbut(?= \d)/gi, 'bute').replace(/\byne\b/g, 'ine').replace(/\bene\b/g, 'een').replace(/\ben\b/g, 'een').replace(/\bol\b/g, 'ole');
+  }
+  function speakable(src) {
+    let s = ' ' + String(src).replace(/[\u{1F300}-\u{1FAFF}☀-➿]/gu, ' ') + ' ';
+    const X = (a, b) => { s = s.replace(a, b); };
+    X(/Zn\s?\(Hg\)\s?\/\s?HCl/g, 'zinc amalgam and H C L');
+    X(/H2\s?\/\s?Ni/g, 'H 2 over nickel');
+    X(/NaNH2/g, 'sodium amide'); X(/\bNH3\b/g, 'ammonia'); X(/\bH2O\b/g, 'water'); X(/\bZn\b/g, 'zinc');
+    X(/\bsp([23]?)\b/g, (m, d) => 'S P' + (d ? ' ' + d : ''));
+    X(/δ\s?\+/g, ' delta plus '); X(/δ\s?[−-]/g, ' delta minus ');
+    X(/\(\s*[σπ]\s*\)/g, ''); X(/\bIUPAC\b/g, 'eye you pack');
+    X(/σ/g, ' sigma '); X(/π/g, ' pi '); X(/α/g, 'alpha'); X(/ω/g, 'omega'); X(/β/g, 'beta'); X(/γ/g, 'gamma');
+    X(/[⁺]/g, ' plus '); X(/[⁻]/g, ' minus ');
+    X(/\b([123])\s?°/g, (m, d) => ({ 1: ' primary ', 2: ' secondary ', 3: ' tertiary ' })[d]);
+    X(/→/g, ' , which gives , '); X(/(\d)\s?°/g, '$1 degrees'); X(/%/g, ' percent');
+    X(/\s?>\s?/g, ' greater than '); X(/\s?<\s?/g, ' less than ');
+    X(/[A-Za-z0-9()=≡–+−-]+/g, t => { const w = /^\((.+)\)$/.exec(t), b = w ? w[1] : t; return isFormula(b) ? (w ? ' , ' : ' ') + readFormula(b) + (w ? ' , ' : ' ') : t; });
+    X(/(?:[A-Za-z]*\d[A-Za-z0-9,-]*-[A-Za-z][A-Za-z0-9,-]*|[A-Za-z]+-\d[A-Za-z0-9,-]*)/g, readName);
+    X(PFX, '$& ');
+    X(/\s=\s/g, ' equals '); X(/\s[−–]\s/g, ' , ');
+    X(/\//g, ' and '); X(/;/g, ', and ');
+    return s.replace(/\s+/g, ' ').replace(/\s+([,.?!:])/g, '$1').trim();
+  }
+  function arSpeak(t) {
+    return String(t).replace(/[\u{1F300}-\u{1FAFF}☀-➿]/gu, ' ')
+      .replace(/\(?\b1\s?°\)?/g, ' أوّلي ').replace(/\(?\b2\s?°\)?/g, ' ثانوي ').replace(/\(?\b3\s?°\)?/g, ' ثالثي ')
+      .replace(/→/g, '، يدّي ').replace(/←/g, '، ').replace(/=/g, '، يعني ').replace(/>/g, ' أكبر من ').replace(/</g, ' أصغر من ')
+      .replace(/π/g, ' باي ').replace(/σ/g, ' سيجما ').replace(/δ\s?\+/g, ' دلتا موجب ').replace(/δ\s?[−-]/g, ' دلتا سالب ')
+      .replace(/\+/g, ' و ').replace(/°/g, ' درجة').replace(/%/g, ' في المية').replace(/[()«»"]/g, ' ').replace(/…/g, '، ')
+      .replace(/\s+/g, ' ').trim();
+  }
+  function splitRuns(text) {
+    const out = [], re = /(?:\(?\d[\d,]*-)?[A-Za-zα-ωσπδ][A-Za-z0-9α-ωσπδ()\-=≡+−⁺⁻'’.,/°%]*(?:\s+(?:\(?\d[\d,]*-)?[A-Za-z0-9α-ωσπδ][A-Za-z0-9α-ωσπδ()\-=≡+−⁺⁻'’.,/°%]*)*/g;
+    let last = 0, m;
+    while ((m = re.exec(text))) {
+      if (m.index > last) out.push({ lang: 'ar', t: text.slice(last, m.index) });
+      out.push({ lang: 'en', t: m[0] }); last = m.index + m[0].length;
+    }
+    if (last < text.length) out.push({ lang: 'ar', t: text.slice(last) });
+    const res = [];
+    out.forEach(r => {
+      const simple = r.lang === 'en' && /^[a-z]{1,12}[).,]*$/i.test(r.t.trim()) && !/^[A-Z]{2,}/.test(r.t.trim());
+      const x = simple ? { lang: 'ar', t: r.t } : r, last = res[res.length - 1];
+      if (last && last.lang === 'ar' && x.lang === 'ar') last.t += x.t; else res.push({ ...x });
+    });
+    return res.filter(r => r.lang === 'en' ? r.t.trim() : /[؀-ۿA-Za-z0-9]/.test(r.t));
+  }
+  const spk = r => r.lang === 'en' ? speakable(r.t) : arSpeak(r.t);
+
+  function mouth(on) {
+    VO.talking = on;
+    if (!on) SVG.querySelectorAll('.m-o').forEach(m => m.style.transform = 'scale(.9,.16)');
+  }
+  function mouthLoop() {
+    clearInterval(VO.mt);
+    let ph = 0;
+    VO.mt = setInterval(() => {
+      if (!VO.talking) return;
+      ph++;
+      const syl = Math.random(), o = ph % 7 === 0 ? .15 : syl < .18 ? .3 : .45 + syl * .6, w = 1 - (o - .5) * .2;
+      SVG.querySelectorAll('.m-o').forEach(m => m.style.transform = `scale(${w.toFixed(2)},${o.toFixed(2)})`);
+    }, 92);
+  }
+  function talkOn() { VO.on = true; IN.classList.add('talk'); mouth(false); mouthLoop(); }
+  function voiceStop() {
+    VO.gen++;
+    try { if (SY) SY.cancel(); } catch {}
+    clearInterval(VO.ka); VO.ka = null; mouth(false);
+  }
+  function utter(text, lang, o = {}) {
+    return new Promise(res => {
+      if (!SY || !String(text).trim()) return res('skip');
+      const v = pickV(lang); if (!v) return res('nv');
+      const g = VO.gen, u = new SpeechSynthesisUtterance(text);
+      u.voice = v; u.lang = v.lang; u.rate = VO.rate * (o.rk || 1); u.pitch = pitchFor(v); u.volume = 1;
+      let done = false, t0 = 0, wd = null;
+      const end = () => {
+        if (done) return; done = true; clearTimeout(wd); mouth(false);
+        if (t0 && g === VO.gen) { const d = (performance.now() - t0) / 1000; if (d > .8 && text.length > 12) { const c = text.length / d / u.rate; if (c > 5 && c < 30) VO.cps[lang] = VO.cps[lang] * .55 + c * .45; } }
+        res(g === VO.gen ? 'ok' : 'stop');
+      };
+      u.onstart = () => { if (g !== VO.gen) return; t0 = performance.now(); mouth(true); if (o.onstart) o.onstart(u.rate); };
+      u.onboundary = () => { if (g === VO.gen) mouth(true); };
+      u.onend = end; u.onerror = end;
+      if (!VO.ka && !v.localService && !/android|iphone|ipad/i.test(navigator.userAgent)) VO.ka = setInterval(() => { if (SY.speaking && !SY.paused) { SY.pause(); SY.resume(); } }, 9000);
+      SY.speak(u);
+      const chk = () => { if (done) return; if (g !== VO.gen) return end(); if (!SY.speaking && !SY.pending) return end(); wd = setTimeout(chk, 1500); };
+      wd = setTimeout(chk, 2500 + text.length * 110);
+    });
+  }
+  function mark(el) {
+    document.querySelectorAll('.tts-on').forEach(x => x.classList.remove('tts-on'));
+    if (el) { el.classList.add('tts-on'); lookAt(el, 4000); }
+  }
+  function ttsStop(keepBub) {
+    voiceStop(); VO.on = false;
+    clearInterval(VO.mt); if (!st.teach) IN.classList.remove('talk'); mark(null);
+    SVG.querySelectorAll('.m-o').forEach(m => m.style.transform = '');
+    if (!keepBub && BUB.querySelector('.tts-b')) hide();
+  }
+  async function readItems(items, bub) {
+    if (!SY) { say('المتصفح ده مش بيدعم القراءة 😅 جرّب Chrome أو Safari'); return; }
+    ttsStop(true);
+    if (!pickV('en') && !pickV('ar')) { say('مش لاقي أصوات على الجهاز ده 😅 جرّب من Chrome'); return; }
+    const g = VO.gen; talkOn();
+    if (bub) say(`<span class="tts-b"><span class="tts-wave"><i></i><i></i><i></i><i></i></span>${bub}</span>`, { btns: [{ t: '⏹ وقّف', fn: () => ttsStop() }] });
+    for (let k = 0; k < items.length; k++) {
+      const it = items[k];
+      if (k && it.gap) { await pause_(it.gap); if (g !== VO.gen) return; }
+      mark(it.el);
+      for (const r of it.runs) { const x = await utter(spk(r), r.lang); if (x === 'stop' || g !== VO.gen) return; }
+    }
+    if (g === VO.gen) ttsStop();
+  }
+  const LET = ['Ay', 'Bee', 'See', 'Dee', 'E'];
+  function readQ(withOpts) {
+    const q = curQ(); if (!q) return say('مفيش سؤال قدامي دلوقتي 😅');
+    const items = [{ runs: [{ lang: 'en', t: q.q }], el: $('qText') }];
+    if (withOpts && q.type === 'mcq') {
+      [...document.querySelectorAll('#qOptions .opt')].forEach((el, i) => {
+        if (el.classList.contains('gone')) return;
+        const tx = (el.querySelector('span:last-child') || el).textContent;
+        items.push({ runs: [{ lang: 'en', t: `${LET[i]}, ${tx}.` }], el, gap: items.length === 1 ? 650 : 380 });
+      });
+    }
+    act('wave', 900);
+    readItems(items, withOpts && q.type === 'mcq' ? 'بقرالك السؤال والاختيارات…' : 'بقرالك السؤال…');
+  }
+  function readText(t) {
+    t = String(t || '').trim(); if (!t) return;
+    const ar = /[؀-ۿ]/.test(t);
+    if (ar && !pickV('ar')) return say('مفيش صوت عربي على الجهاز ده 😅<br>جرّب Edge أو الموبايل', { ms: 4200 });
+    readItems([{ runs: ar ? splitRuns(t) : [{ lang: 'en', t }] }], 'بقرالك اللي حددته…');
+  }
+  const vLabel = v => v.name.replace(/Microsoft |Google |\(.*?\)| Online|\s-\s.*$/g, '').trim();
+  function nextVoice() {
+    const g = wantG(), all = rankV('en').filter(v => !VBAD.test(v.name));
+    const mine = all.filter(v => vGender(v) === g), pool = (mine.length ? mine : all).slice(0, 8);
+    if (!pool.length) return say('مش لاقي أصوات إنجليزي على الجهاز ده 😅');
+    const cur = pickV('en'), i = pool.findIndex(v => cur && v.voiceURI === cur.voiceURI), nv = pool[(i + 1) % pool.length];
+    ls(`v_en_${g}`, nv.voiceURI);
+    readItems([{ runs: [{ lang: 'en', t: g === 'f' ? "Hi! I'll read every question for you, nice and clear." : "Hey! I'll read every question for you, nice and clear." }] }], '');
+    say(`🎙️ الصوت: <b dir="ltr">${esc(vLabel(nv))}</b>${mine.length ? '' : '<br><span style="font-size:12px;opacity:.75">مفيش أصوات تانية من النوع ده على جهازك</span>'}`, { btns: [{ t: '⏭️ صوت تاني', fn: nextVoice }, { t: '✔ تمام', fn: readMenu }] });
+  }
+  function toggleRate() {
+    VO.rate = VO.rate > .9 ? .8 : .94; ls('rate', String(VO.rate));
+    say(VO.rate > .9 ? '🐇 رجعت للسرعة العادية' : '🐢 هقرا أبطأ شوية', { ms: 1800 });
+    setTimeout(readMenu, 1500);
+  }
+  function readMenu() {
+    const q = curQ(); if (!q) return say('مفيش سؤال قدامي دلوقتي 😅');
+    if (!SY) return say('المتصفح ده مش بيدعم القراءة 😅 جرّب Chrome أو Safari');
+    const btns = [{ t: '❓ السؤال بس', fn: () => readQ(false) }];
+    if (q.type === 'mcq') btns.push({ t: '🔤 السؤال والاختيارات', fn: () => readQ(true) });
+    btns.push({ t: '🎙️ غيّر الصوت', fn: nextVoice }, { t: VO.rate > .9 ? '🐢 أبطأ' : '🐇 أسرع', fn: toggleRate }, { t: '✖', fn: () => {} });
+    say(`أقرالك إيه؟ 🔊<br><span style="font-size:12.5px;opacity:.8">ولو ${G('حددت', 'حددتي')} أي كلام في الصفحة ${G('هتلاقي', 'هتلاقي')} زرار 🔊 تحته</span>`, { btns });
+  }
+  document.addEventListener('visibilitychange', () => { if (document.hidden && VO.on && !st.teach) ttsStop(); });
+
+  const SELB = document.createElement('button');
+  SELB.id = 'ttsSel'; SELB.type = 'button'; SELB.innerHTML = '<span class="ts-ic"><i></i><i></i><i></i></span><span>اقرالي</span>';
+  document.body.appendChild(SELB);
+  let selT = null, selTxt = '';
+  function selCheck() {
+    const s = getSelection(), t = s && !s.isCollapsed ? String(s).replace(/\s+/g, ' ').trim() : '';
+    const n = s && s.anchorNode, a = n && (n.nodeType === 1 ? n : n.parentElement);
+    if (!SY || !t || t.length < 2 || t.length > 1200 || (a && a.closest('input, textarea, [contenteditable], #ttsSel, #inloBub'))) { SELB.classList.remove('on'); return; }
+    let r; try { r = s.getRangeAt(0).getBoundingClientRect(); } catch { return; }
+    if (!r || (!r.width && !r.height)) { SELB.classList.remove('on'); return; }
+    selTxt = t;
+    const touch = matchMedia('(pointer: coarse)').matches, w = SELB.offsetWidth || 104, h = SELB.offsetHeight || 40;
+    const x = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2));
+    let y = touch ? r.bottom + 16 : r.top - h - 10;
+    if (y < 8) y = r.bottom + 12; if (y > innerHeight - h - 8) y = Math.max(8, r.top - h - 12);
+    SELB.style.left = x + 'px'; SELB.style.top = y + 'px';
+    if (!SELB.classList.contains('on')) { SELB.classList.remove('on'); void SELB.offsetWidth; SELB.classList.add('on'); }
+  }
+  document.addEventListener('selectionchange', () => { clearTimeout(selT); selT = setTimeout(selCheck, 240); });
+  addEventListener('scroll', () => { if (SELB.classList.contains('on')) selCheck(); }, { passive: true, capture: true });
+  ['pointerdown', 'mousedown', 'touchstart'].forEach(ev => SELB.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); }, { passive: false }));
+  SELB.addEventListener('click', e => {
+    e.preventDefault(); e.stopPropagation(); SELB.classList.remove('on');
+    if (st.teach) TB.paused || teachPause();
+    readText(selTxt);
+  });
+
+  const TRICKS = {"Formative 1 · Q1":"«unequal» = فيه فرق = **Polar**. لو قال zero يبقى Non-polar.","Formative 1 · Q2":"الـ EN زي سلم بتطلعه يمين ← **بتزيد**.","Formative 1 · Q3":"**F** = ملكة السالبية، أي سؤال «highest EN» إجابته Fluorine.","Formative 1 · Q4":"«أيوني = أكتر من 2» ← **Greater than 2**.","Formative 1 · Q5":"Non = لا فرق ← **صفر**.","Formative 1 · Q6":"الشاطر ياخد الإلكترونات (السالبة) ← **δ−**.","Formative 1 · Q7":"methane = CH4 = **4** روابط = 4 أوربيتالات.","Formative 1 · Q8":"sp3 = 4 أذرع = هرم ← **Tetrahedral**.","Formative 1 · Q9":"«double» = 2 ← sp**2**.","Formative 1 · Q10":"«triple» = 3 ← **sp** (أقل حاجة).","Formative 1 · Q11":"Homo = متساوي ← **كل ذرة تاخد إلكترون**.","Formative 1 · Q12":"إلكترون لوحده = **Free radical**.","Formative 1 · Q13":"Hetero = مختلف ← **الاتنين لذرة واحدة**.","Formative 1 · Q14":"كربون + موجب (cation) = **Carbocation**.","Formative 1 · Q15":"Electro-**phile** = philo = بيحب ← **electron-loving**.","Formative 1 · Q16":"الموجب بيحب الإلكترونات ← **H+**.","Formative 1 · Q17":"«replaced» = استبدال ← **Substitution**.","Formative 1 · Q18":"«two combine to one» = جمع ← **Addition**.","Formative 1 · Q19":"Addition محتاجة رابطة تتفتح ← **C=C أو C≡C**.","Formative 1 · Q20":"Elimination = **عكس الـ Addition بالظبط**.","Formative 1 · Q21":"sp3 = s + p + p + p = **4 أوربيتالات**.","Formative 1 · Q22":"ألكان مشبع = **+2** ← CnH2n+2.","Formative 1 · Q23":"الفرع على كربون 2 من أقرب ناحية ← **2-methylbutane**.","Formative 1 · Q24":"**neo** = نُص النهاية مزحوم (quaternary).","Formative 1 · Q25":"السؤال قايلها حرفيًا: ethyl على 3 + 6 كربون ← **3-ethylhexane**.","Formative 1 · Q26":"شيل H من الألكان ← **+1** ← CnH2n+1.","Formative 1 · Q27":"«4 غاز، 17 سائل» ← C5–C17 = **Liquid**.","Formative 1 · Q28":"الكورة مساحتها صغيرة ← **reduced surface area**.","Formative 1 · Q29":"الشبيه يذيب الشبيه ← **Non-polar**.","Formative 1 · Q30":"«selective» = **B**r = **B**est choice ← **Bromine**.","Formative 2 · Q1":"ظهر فرع (methyl) = الهيكل اتغير ← **Chain**.","Formative 2 · Q2":"رقّم من الشمال: الرابطة بين 2 و3 ← **Pent-2-ene**.","Formative 2 · Q3":"«cyclopropane» = كلمة **strain** دايمًا ← **angle strain**.","Formative 2 · Q4":"المثلث متضايق ← **Cyclopropane أسرع بسبب ring strain**.","Formative 2 · Q5":"أول رابطة σ والزيادة π ← **1σ + 1π**.","Formative 2 · Q6":"«dihalo… ring closure» = الممسحة **Zinc**.","Formative 2 · Q7":"double = sp**2**.","Formative 2 · Q8":"vicinal dibromide + الممسحة ← **Zn**.","Formative 2 · Q9":"cis-trans في البنك = **But-2-ene** دايمًا.","Formative 2 · Q10":"Position = نفس السلسلة (1-ene/2-ene)، Chain = فيه فرع (2-methylpropene).","Formative 2 · Q11":"trans متماثل بيترص ← **better crystal packing**.","Formative 2 · Q12":"Saytzeff = الرابطة في النص ← **But-2-ene**.","Formative 2 · Q13":"ألكين = **صفر** ← CnH2n.","Formative 2 · Q14":"الرابطة اتحركت من 1 لـ 2 ← **Position**.","Formative 2 · Q15":"3 كربون في حلقة ← **Cyclo-prop-ane**.","Formative 2 · Q16":"الدوران ممنوع بسبب **π**.","Formative 2 · Q17":"زي أي ثبات ← **3° > 2° > 1°**.","Formative 2 · Q18":"«الغني يزداد غنى» ← **more substituted**.","Formative 2 · Q19":"الشبيه يذيب الشبيه ← **insoluble in water / soluble in nonpolar**.","Formative 2 · Q20":"نزع ماية = **strong acid + heat**.","Formative 2 · Q21":"«less strained» = المرتاح ← **Cyclohexane**.","Formative 2 · Q22":"butan-**2**-ol ← But-**2**-ene.","Formative 2 · Q23":"مثلث = **60°**.","Formative 2 · Q24":"الرابطة من الطرف (1) والفرع على 2 ← **2-Methylbut-1-ene**.","Formative 2 · Q25":"Clemmensen = **Zn(Hg)/HCl** (زنك + زئبق + حمض).","Formative 2 · Q26":"terminal = بيبدأ بـ **CH2=**.","Formative 2 · Q27":"cis = **same side**.","Formative 2 · Q28":"«cis بيغلي» ← **cis-But-2-ene**.","Formative 2 · Q29":"small base = **Zaitsev (Saytzeff)**.","Formative 2 · Q30":"حلقة = بتاكل 2 H زي الدبل ← **CnH2n**.","Formative 3 · Q1":"triple = 1 أساس + 2 زيادة ← **1σ + 2π**.","Formative 3 · Q2":"2,3 dibromo ← الرابطة بين 2 و3 ← **Pent-2-yne**.","Formative 3 · Q3":"أحمض = **Ethyne** (sp = 50% s).","Formative 3 · Q4":"رقّم من ناحية الـ Cl ← Cl على 2 والـ ≡ على 3 ← **2-Chlorohex-3-yne**.","Formative 3 · Q5":"الحمضية = **high s-character** دايمًا.","Formative 3 · Q6":"3 + 1 = 4، والرابطة في النص ← **But-2-yne**.","Formative 3 · Q7":"acetylide محتاج H طرفي ← **But-1-yne**.","Formative 3 · Q8":"«الثالثي يبوّظ» ← **Elimination**.","Formative 3 · Q9":"**NaNH2 in liquid NH3** (Na + NH مع بعض).","Formative 3 · Q10":"الثبات = **high s-character of sp**.","Formative 3 · Q11":"Grignard بياخد الـ H الحمضي ← **CH3-C≡C-MgI + CH4**.","Formative 3 · Q12":"الـ en ياخد 1 ← **Pent-1-en-4-yne**.","Formative 3 · Q13":"«الأولي يطوّل» ← **Primary = SN2**.","Formative 3 · Q14":"sp = نص s ← **50%**.","Formative 3 · Q15":"hydrocarbon = **nonpolar**.","Formative 3 · Q16":"Br على الكربون اللي في النص (جنبه كربونتين) ← **Secondary**.","Formative 3 · Q17":"البروم منقّي يروح للثالثي ← **2-Bromo-2-methylpropane**.","Formative 3 · Q18":"Cl = Crazy (reactive)، Br = Best (selective).","Formative 3 · Q19":"أقل أرقام: Br على 2 وmethyl على 5 ← **2-Bromo-5-methylhexane**.","Formative 3 · Q20":"Markovnikov = الهالوجين في النص ← **2-Bromopropane**.","Formative 3 · Q21":"Cl يروح للكربون الثالثي ← **2-Chloro-2-methylpropane**.","Formative 3 · Q22":"الأكبر أنشط ← **HI > HBr > HCl > HF**.","Formative 3 · Q23":"زي أي ثبات ← **Tertiary > Secondary > Primary**.","Formative 3 · Q24":"PBr3 = **minimizes rearrangements**.","Formative 3 · Q25":"Br مكان OH بالظبط ← **2-Bromobutane**.","Formative 3 · Q26":"كلمة **generally** + **higher**.","Formative 3 · Q27":"الأكبر يغلي متأخر ← **F < Cl < Br < I**.","Formative 3 · Q28":"C **δ+** والهالوجين **δ−**.","Formative 3 · Q29":"NBS = Next Bond Spot ← **3-Bromoprop-1-ene**.","Formative 3 · Q30":"الاختيار اللي فيه insoluble in water + nonpolar + polarized bond.","Essay · Q1":"«السلسلة والمكان» ← **Chain + Position**.","Essay · Q2":"«P مع Br و S مع Cl» ← **PBr3 + SOCl2**.","Essay · Q3":"«واحد أساس واتنين زيادة» ← **σ + π**.","Essay · Q4":"«زاوية مضغوطة ورابطة معوجة» ← **angle strain + bent bonds**.","Essay · Q5":"«زوّد H أو شيل X» ← **hydrogenation + reduction of alkyl halides**.","Question Bank · Q1":"alcoholic KOH = نزع + Saytzeff ← **But-2-ene**.","Question Bank · Q2":"H–C≡C–H: 2 C–H + 1 من الـ ≡ = **3σ**، و**2π**.","Question Bank · Q3":"Position = نفس السلسلة ← **But-1-ene / But-2-ene**.","Question Bank · Q4":"Markovnikov ← **2-Bromopropane**.","Question Bank · Q5":"الكورة مساحتها أقل ← **reduces surface area and bp**.","Question Bank · Q6":"رقّم من ناحية الفرع: methyl على 2 والـ ≡ على 3 ← **2-Methylhex-3-yne**.","Question Bank · Q7":"SN2 = الأقل زحمة ← **Bromomethane**.","Question Bank · Q8":"المثلث متضايق ← **Cyclopropane بسبب ring strain**.","Question Bank · Q9":"H2/Ni = الرابطة تختفي ← **Propane**.","Question Bank · Q10":"C **δ+** وCl **δ−**.","Question Bank · Q11":"البروم منقّي ← **2-Bromo-2-methylpropane**.","Question Bank · Q12":"عدّ الروابط: 1 ← sp3، 2 ← sp2، 3 ← sp.","Question Bank · Q13":"butan-**2**-ol ← But-**2**-ene.","Question Bank · Q14":"silver acetylide محتاج H طرفي ← **But-1-yne**.","Question Bank · Q15":"Br على 2 ← **2-Bromopentane**.","Question Bank · Q16":"الخطوة البطيئة في SN1 = **ionization ← carbocation**.","Question Bank · Q17":"«trans بينصهر» ← **trans + crystal packing**.","Question Bank · Q18":"Grignard + ماية = ألكان ← **Methane**.","Question Bank · Q19":"«انزع مرتين» ← **vicinal أو geminal dihalide**.","Question Bank · Q20":"الإيثانول = OEt مكان Cl ← **2-Ethoxy-2-methylpropane**.","Question Bank · Q21":"الحمضية = **high s-character**.","Question Bank · Q22":"«loses HX» = خروج ← **Elimination**.","Question Bank · Q23":"Br مكان OH ← **2-Bromobutane**.","Question Bank · Q24":"Homo ← radicals، Hetero ← ions.","Question Bank · Q25":"الفرع في النص بالظبط ← **3-Methylpentane**.","Question Bank · Q26":"strong nucleophile + 1° ← **SN2**.","Question Bank · Q27":"الرابطة من الطرف والفرع على 2 ← **2-Methylbut-1-ene**.","Question Bank · Q28":"Cl = Crazy (reactive)، Br = Best (selective).","Question Bank · Q29":"3 + 1 = 4، الرابطة في النص ← **But-2-yne**.","Question Bank · Q30":"E2 = **strong base + heat**.","Question Bank · Q31":"SN1 = الثالثي ← **Tertiary carbocation**.","Question Bank · Q32":"Cl للثالثي ← **2-Chloro-2-methylpropane**.","Question Bank · Q33":"double = sp2 = **120°**.","Question Bank · Q34":"الشبيه يذيب الشبيه ← **insoluble in water / soluble in nonpolar**.","Question Bank · Q35":"NBS ← **3-Bromoprop-1-ene**.","Question Bank · Q36":"SN1 = الأكتر زحمة ← **(CH3)3CBr**.","Question Bank · Q37":"peroxide بيقلب الآية ← **1-Bromopropane**.","Question Bank · Q38":"triple = خط مستقيم ← **Linear 180°**.","Question Bank · Q39":"OH− عنده إلكترونات = nucleophile، H+ = electrophile.","Question Bank · Q40":"aqueous = ماية تدخل ← **Propan-2-ol**.","Question Bank · Q41":"trans = أثبت ← **trans-But-2-ene**.","Question Bank · Q42":"الـ yne ياخد 1 هنا (أقرب للطرف) ← **Hex-4-en-1-yne**.","Question Bank · Q43":"SN2 ← inversion، SN1 ← racemization.","Question Bank · Q44":"Br على الكربونتين ← **1,2-Dibromoethane**.","Question Bank · Q45":"أقل أرقام: 2 و4، والأبجدية Bromo قبل Chloro ← **2-Bromo-4-chloropentane**.","Question Bank · Q46":"الدوران هيكسر **π (sideways overlap)**.","Question Bank · Q47":"ألكاين = −2 ← 2×6 − 2 = **C6H10**.","Question Bank · Q48":"strong base = E2 = حلقة بدبل ← **Cyclohexene**.","Question Bank · Q49":"PBr3 = **reduces rearrangements**.","Question Bank · Q50":"الطويل بيغلي متأخر ← **London forces stronger**.","Question Bank · Q51":"E1 = **Carbocation** (زي SN1).","Question Bank · Q52":"H2/Ni ← **Cyclohexane**.","Question Bank · Q53":"gem = توأم في نفس البيت ← **CH3–CHBr2**.","Question Bank · Q54":"Saytzeff ← **more substituted**.","Question Bank · Q55":"cis-trans = **But-2-ene**.","Question Bank · Q56":"الأكبر يغلي متأخر ← **F < Cl < Br < I**.","Question Bank · Q57":"نزع ماية من 3 كربون ← **Propene**.","Question Bank · Q58":"الأولي يطوّل ← **C–C bond جديدة ← alkyne أطول**.","Question Bank · Q59":"الثالثي = **carbocation أثبت**.","Question Bank · Q60":"3° + polar protic + heat + no strong base ← **E1**."};
+  const CONCEPTS = [{"re": "peroxide", "ar": "في وجود **peroxides** التفاعل بيمشي بالشقوق الحرة، فالـ Br بيروح للكربون الطرفي، يعني **عكس Markovnikov**.", "en": "With **peroxides** the reaction goes through free radicals, so Br adds to the end carbon: **anti-Markovnikov**."}, {"re": "NBS|allylic", "ar": "الـ **NBS** بتعمل allylic bromination: البروم بيدخل على الكربون اللي **جنب** الرابطة المزدوجة، والرابطة نفسها بتفضل زي ما هي.", "en": "**NBS** does allylic bromination: Br goes on the carbon **next to** the double bond, and the double bond stays."}, {"re": "markovnikov|(propene|methylpropene).*(HBr|HCl)|(HBr|HCl).*propene", "ar": "قاعدة **Markovnikov**: الـ H بيروح للكربون اللي عليه H أكتر، والهالوجين بيروح للكربون اللي في النص، لأن الكاربوكاتيون هناك **أثبت**.", "en": "**Markovnikov's rule**: H goes to the carbon that already has more H, and the halogen goes to the more substituted carbon, where the carbocation is **more stable**."}, {"re": "grignard|MgBr|MgI", "ar": "الـ **Grignard** زي قاعدة قوية جدًا: أول ما يلاقي H حمضي (ماية أو ألكاين طرفي) ياخده ويطلع **ألكان**.", "en": "A **Grignard** reagent acts like a very strong base: it grabs any acidic H (water or a terminal alkyne) and becomes an **alkane**."}, {"re": "propynide|acetylide.*(halide|bromide)|alkyl halide.*acetylide|metal acetylides|NaNH2 followed", "ar": "الـ **acetylide** نيوكليوفيل قوي: مع هاليد **أولي** يعمل SN2 والسلسلة **تطول**، ومع هاليد **ثالثي** يعمل نزع.", "en": "An **acetylide** is a strong nucleophile: with a **primary** halide it does SN2 and the chain **grows**; with a **tertiary** halide it does elimination."}, {"re": "acidity|acidic|s-character|acetylide anion", "ar": "كل ما الـ **s-character** يزيد، الإلكترونات تقرب من النواة، فالأنيون يبقى أثبت والـ H أحمض. الـ sp فيها **50%** عشان كده الألكاين الطرفي الأحمض.", "en": "More **s-character** holds electrons closer to the nucleus, so the anion is more stable and the H is more acidic. sp has **50%**, so terminal alkynes are the most acidic."}, {"re": "terminal|internal|silver|NaNH2", "ar": "الألكاين **الطرفي** بس هو اللي عنده H على الكربون الثلاثي (≡C–H)، فهو بس اللي يتفاعل مع NaNH2 أو الفضة. يعني **1-yne**.", "en": "Only a **terminal** alkyne has an H on the triple-bond carbon (≡C–H), so only it reacts with NaNH2 or silver: it must be a **1-yne**."}, {"re": "dehydrohalogenation|dihalide|vicinal|geminal", "ar": "عشان تعمل رابطة ثلاثية لازم **تنزع HX مرتين**، فالبداية لازم تكون **dihalide**: vicinal (على كربونتين جنب بعض) أو geminal (الاتنين على نفس الكربون).", "en": "To make a triple bond you **remove HX twice**, so you start from a **dihalide**: vicinal (on neighbouring carbons) or geminal (both on the same carbon)."}, {"re": "saytzeff|zaitsev|alcoholic KOH|ethanolic KOH|dehydration|elimination of", "ar": "في النزع، الـ H بيتشال من الكربون اللي عليه H **أقل**، فبيطلع الألكين **الأكتر استبدال**، وده الأثبت (Saytzeff).", "en": "In elimination, H is removed from the carbon with **fewer** H, giving the **more substituted** alkene, which is the most stable (Saytzeff)."}, {"re": "aqueous KOH", "ar": "الـ KOH **المائي** معناه استبدال: الـ OH ياخد مكان الهالوجين في نفس المكان وتطلع **كحول**. لو كحولي ومعاه تسخين يبقى نزع.", "en": "**Aqueous** KOH means substitution: OH takes the halogen's place and you get an **alcohol**. Alcoholic KOH with heat means elimination."}, {"re": "SN ?2|bromomethane|inversion|back side", "ar": "**SN2** خطوة واحدة: النيوكليوفيل يهجم من **ورا** والهاليد يخرج في نفس اللحظة. عشان كده بيحب الكربون اللي مش زحمة: **Methyl ثم 1°**.", "en": "**SN2** is one step: the nucleophile attacks from the **back** while the halide leaves. So it prefers uncrowded carbons: **methyl, then 1°**."}, {"re": "SN ?1|E1\\b|carbocation|racemi|polar protic|ionization", "ar": "**SN1 و E1** بيبدأوا بخروج الهاليد وتكوين **carbocation**. الكاربوكاتيون الثالثي أثبت حاجة، فالـ **3°** هو الأسرع.", "en": "**SN1 and E1** start when the halide leaves to form a **carbocation**. Tertiary carbocations are the most stable, so **3°** reacts fastest."}, {"re": "E2\\b|strong base", "ar": "**E2** محتاجة **قاعدة قوية + تسخين**: القاعدة تشيل H والهاليد يخرج في نفس الخطوة وتطلع رابطة مزدوجة.", "en": "**E2** needs a **strong base + heat**: the base removes H while the halide leaves in one step, forming a double bond."}, {"re": "PBr3|SOCl2|hydrogen halides|HI > HBr|alcohol reactivity|alcohols? (in|into|to)", "ar": "الكحول بيتحول لهاليد بإن الـ OH يتشال ويحل مكانه هالوجين **في نفس المكان**. الـ **PBr3** بيعمل كده من غير ما الهيكل يتلخبط (rearrangement).", "en": "An alcohol becomes a halide when OH is replaced by a halogen **at the same carbon**. **PBr3** does this without scrambling the skeleton (no rearrangement)."}, {"re": "free radical halogenation|UV light|selective|chlorine and bromine|bromine.*chlorine", "ar": "الكلور **نشيط** ومش بيختار. البروم **أبطأ** فبيختار الكربون **الثالثي** اللي الشق الحر عليه أثبت. يعني Cl = Crazy و Br = Best choice.", "en": "Chlorine is **reactive** and unselective. Bromine is **slower**, so it picks the **tertiary** carbon where the radical is most stable."}, {"re": "hydrogenation|H2/Ni", "ar": "الـ **H2/Ni** بيفتح الرابطة المزدوجة ويحط H على كل كربون، فيطلع **ألكان** بنفس عدد الكربون.", "en": "**H2/Ni** opens the double bond and adds H to each carbon, giving an **alkane** with the same carbons."}, {"re": "bromine in an inert|Br2 \\+ ethene|reacts with bromine", "ar": "الـ Br2 مع الألكين بيضيف **ذرتين بروم**، واحدة على كل كربون من الرابطة المزدوجة: **1,2-dibromo**.", "en": "Br2 adds **two bromines** to an alkene, one on each double-bond carbon: a **1,2-dibromo** product."}, {"re": "cis|trans|geometric|restricted rotation", "ar": "عشان يبقى فيه **cis-trans** لازم كل كربون في الرابطة المزدوجة يشيل **حاجتين مختلفين**، والدوران ممنوع بسبب رابطة **π**. الـ cis غليانه أعلى، والـ trans انصهاره أعلى.", "en": "For **cis-trans** isomers each double-bond carbon needs **two different groups**, and rotation is blocked by the **π bond**. cis boils higher; trans melts higher."}, {"re": "cyclopropane|ring strain|ring-opening|strain", "ar": "الـ **cyclopropane** زاويته **60°** بدل 109.5°، فالحلقة متضايقة جدًا (**ring strain**) والروابط محنية وضعيفة، فبتتفتح بسهولة.", "en": "**Cyclopropane** has **60°** angles instead of 109.5°, so the ring is strained and its bent bonds are weak: it opens easily."}, {"re": "zinc|\\bZn\\b|clemmensen", "ar": "الـ **Zinc** بيشيل الهالوجينات: لو على الطرفين يقفل **حلقة**، ولو جنب بعض يعمل **ألكين**. والـ Clemmensen هو Zn(Hg)/HCl.", "en": "**Zinc** removes halogens: from both chain ends it closes a **ring**; from neighbouring carbons it makes an **alkene**. Clemmensen is Zn(Hg)/HCl."}, {"re": "hybridi|sp3|sp2|\\bsp\\b|tetrahedral|linear|bond angle|orbitals", "ar": "عُدّ الروابط: أحادية = **sp3** وزاويتها **109.5°**، مزدوجة = **sp2** وزاويتها **120°**، ثلاثية = **sp** وزاويتها **180°**.", "en": "Count the bonds: single = **sp3** at **109.5°**, double = **sp2** at **120°**, triple = **sp** at **180°**."}, {"re": "sigma|\\bpi\\b|σ|π", "ar": "أول رابطة بين أي ذرتين **σ**، وأي رابطة زيادة **π**. يعني المزدوجة σ+π والثلاثية σ+2π.", "en": "The first bond between two atoms is **σ**; every extra bond is **π**. Double = σ + π, triple = σ + 2π."}, {"re": "electronegativ|ionic|polar|\\bEN\\b", "ar": "فرق السالبية بيحدد نوع الرابطة: **صفر** = غير قطبية، **متوسط** = قطبية، **أكبر من 2** = أيونية. والذرة الأشطر تاخد δ−.", "en": "The EN difference decides the bond: **zero** = non-polar, **medium** = polar, **more than 2** = ionic. The more electronegative atom gets δ−."}, {"re": "homolytic|heterolytic|cleavage|free radicals?", "ar": "الانشطار **Homolytic** = كل ذرة تاخد إلكترون فيطلع **شقوق حرة**. الـ **Heterolytic** = ذرة واحدة تاخد الاتنين فيطلع **أيونات**.", "en": "**Homolytic** cleavage: each atom keeps one electron, giving **radicals**. **Heterolytic**: one atom takes both, giving **ions**."}, {"re": "electrophile|nucleophile", "ar": "الـ **Electrophile** بيحب الإلكترونات (فقير) زي H+. الـ **Nucleophile** عنده إلكترونات زيادة وبيدّيها زي OH−.", "en": "An **electrophile** loves electrons (it's electron-poor), like H+. A **nucleophile** has spare electrons to give, like OH−."}, {"re": "substitution|addition|elimination", "ar": "**Substitution** = حاجة مكان حاجة. **Addition** = اتنين يبقوا واحد على رابطة مزدوجة أو ثلاثية. **Elimination** = عكس الـ Addition بالظبط.", "en": "**Substitution** swaps one group for another. **Addition** joins two molecules across a multiple bond. **Elimination** is the exact reverse of addition."}, {"re": "isomer", "ar": "الـ **Position isomerism** = نفس السلسلة والرابطة اتحركت. الـ **Chain isomerism** = السلسلة نفسها اتغيرت وظهر فرع.", "en": "**Position isomers** keep the chain but move the group. **Chain isomers** change the skeleton itself (a branch appears)."}, {"re": "boiling|melting|surface area|london|van der waals", "ar": "قوى London بتزيد مع **مساحة التلامس**: السلسلة الطويلة غليانها أعلى، والمتفرعة شكلها كورة فمساحتها أقل وغليانها **أقل**.", "en": "London forces grow with **contact surface**: longer chains boil higher; branched molecules are ball-shaped, so they boil **lower**."}, {"re": "soluble|solubility|insoluble", "ar": "**الشبيه يذيب الشبيه**: الهيدروكربونات غير قطبية، فمبتدوبش في الماية (قطبية) وبتدوب في المذيبات غير القطبية.", "en": "**Like dissolves like**: hydrocarbons are non-polar, so they don't dissolve in water but do dissolve in non-polar solvents."}, {"re": "IUPAC|name|nomenclature|classify", "ar": "التسمية: اختار **أطول سلسلة**، ورقّم من الناحية اللي تدي **أقل أرقام** للرابطة المزدوجة أو الفروع، والفروع تتكتب **أبجديًا**.", "en": "Naming: pick the **longest chain**, number from the end giving the **lowest locants**, and list substituents **alphabetically**."}, {"re": "general formula|CnH|molecular formula", "ar": "الصيغ العامة: ألكان **CnH2n+2**، ألكين وسيكلو ألكان **CnH2n**، ألكاين **CnH2n−2**. كل رابطة زيادة أو حلقة بتاكل 2 H.", "en": "General formulas: alkane **CnH2n+2**, alkene and cycloalkane **CnH2n**, alkyne **CnH2n−2**. Each extra bond or ring removes 2 H."}];
+  const TB = { el: null, steps: [], i: 0, mounted: 0, gen: 0, playing: false, paused: false, lang: ls('tlang') || 'ar', snd: ls('tsnd') !== '0', q: null, sch: null };
+
+  function escB(t) { return esc(String(t)).replace(/\*\*(.+?)\*\*/g, '<b class="hl">$1</b>'); }
+  function wordsHtml(text, o = {}) {
+    const ar = /[؀-ۿ]/.test(text), toks = [];
+    String(text).split(/(\*\*.+?\*\*)/).forEach(p => {
+      if (!p) return;
+      const bold = /^\*\*.+\*\*$/.test(p), body = bold ? p.slice(2, -2) : p;
+      body.split(/(\s+)/).forEach(w => { if (w) toks.push({ w, bold, sp: /^\s+$/.test(w) }); });
+    });
+    const isLat = w => /[A-Za-z0-9]/.test(w) && !/[؀-ۿ]/.test(w);
+    const span = (w, bold, lat) => {
+      const chem = lat && (/\d|[A-Z]{2}|(ane|ene|yne|ol|ide)\b|^(SN|E[12]|sp)/.test(w) || (ar && w.length > 2));
+      const cls = ['tw', bold ? 'hl' : '', chem && o.kw !== false ? 'kw' : '', lat && ar ? 'lt' : ''].filter(Boolean).join(' ');
+      return `<span class="${cls}">${esc(w)}</span>`;
+    };
+    if (!ar) return toks.map(t => t.sp ? ' ' : span(t.w, t.bold, isLat(t.w))).join('');
+    let h = '';
+    for (let i = 0; i < toks.length; i++) {
+      const t = toks[i];
+      if (t.sp) { h += ' '; continue; }
+      if (!isLat(t.w)) { h += span(t.w, t.bold, false); continue; }
+      const grp = [t]; let k = i + 1;
+      while (k + 1 < toks.length && toks[k].sp && !toks[k + 1].sp && isLat(toks[k + 1].w)) { grp.push(toks[k + 1]); k += 2; }
+      i = k - 1;
+      const first = /^([(«"'\[]*)(.*)$/.exec(grp[0].w), last = /^(.*?)([)\].,:;!?»"'،؛…]*)$/.exec(grp.length > 1 ? grp[grp.length - 1].w : first[2]);
+      if (first[1]) h += span(first[1], grp[0].bold, false);
+      const words = grp.map((g, n) => n === 0 ? (grp.length > 1 ? first[2] : last[1]) : n === grp.length - 1 ? last[1] : g.w);
+      h += `<span class="lgrp" dir="ltr">${words.map((w, n) => w ? span(w, grp[n].bold, true) : '').join(' ')}</span>`;
+      if (last[2]) h += span(last[2], grp[grp.length - 1].bold, false);
+    }
+    return h;
+  }
+  function stripB(t) { return String(t).replace(/\*\*/g, ''); }
+  function sentences(t) {
+    return String(t).replace(/^Lecture \d+:\s*/i, '').split(/(?<=[.!؟?])\s+(?=[^\s])/).map(s => s.trim()).filter(s => s.length > 1);
+  }
+  function chainParts(t) { return String(t).split(/\s*→\s*/).map(s => s.trim()).filter(Boolean); }
+
+  function findConcept(q) {
+    const hay = [q.q, q.e, q.type === 'mcq' ? q.opts[q.ans] : (q.ans || []).join(' ')].join(' ');
+    return CONCEPTS.find(c => new RegExp(c.re, 'i').test(hay)) || null;
+  }
+  function trickOf(q) { return TRICKS[q.tag] || null; }
+
+  const NAMEX = /(?:\b\d[\d,]*-)?\b(?:[a-z]+-)?[a-z]*(?:meth|eth|prop|but|pent|hex|cyclo)[a-z0-9,-]*(?:ane|ene|yne|ol|ide)\b|sodium propynide|bromocyclohexane/i;
+  const REAG = /(alcoholic KOH|aqueous KOH|ethanolic KOH|fused KOH|PBr3|SOCl2|HBr|HCl|Br2|NBS|H2\/Ni|NaNH2|CH3MgI|methyl bromide|sodium ethoxide|ethanol|strong base|strong acid|bromine)/i;
+  const COND = /(UV light|organic peroxides|peroxides|heat(?:ing|ed)?|inert solvent|high temperature)/i;
+  function parseChain(f) {
+    f = f.replace(/\s+/g, '').replace(/[–—]/g, '-');
+    const m3 = /^\(CH3\)3C(.+)$/.exec(f); if (m3) return { tert: m3[1] };
+    const u = [], re = /(C(?:H\d?)?|Br|Cl|OH|Mg(?:Br|I)|I|F)(\(([^()]+)\))?|([=≡-])/g; let m, bond = '-';
+    while ((m = re.exec(f))) {
+      if (m[4]) { bond = m[4]; continue; }
+      u.push({ t: m[1], br: m[3] || null, bond: u.length ? bond : null }); bond = '-';
+    }
+    for (let i = 1; i < u.length - 1; i++) if (!/^C/.test(u[i].t) && /^C/.test(u[i - 1].t)) { u[i - 1].br = u[i].t; u.splice(i, 1); if (u[i]) u[i].bond = u[i].bond || '-'; i--; }
+    const nC = u.filter(x => /^C/.test(x.t)).length;
+    return nC >= 3 ? { u } : null;
+  }
+  function locants(u, dir) {
+    const C = u.map((x, i) => /^C/.test(x.t) ? i : -1).filter(i => i >= 0), n = C.length, L = [];
+    const num = i => { const k = C.indexOf(i); return dir > 0 ? k + 1 : n - k; };
+    u.forEach((x, i) => {
+      if (!/^C/.test(x.t)) { const p = i > 0 ? i - 1 : i + 1; if (/^C/.test(u[p].t)) L.push(num(p)); return; }
+      if (x.br) L.push(num(i));
+      if (i > 0 && x.bond && x.bond !== '-' && /^C/.test(u[i - 1].t)) L.push(Math.min(num(i), num(i - 1)));
+    });
+    return L.sort((a, b) => a - b);
+  }
+  function structSvg(p, ans) {
+    const NS = 'http://www.w3.org/2000/svg';
+    const tw = t => t.replace(/\d/g, '').length * 15 + t.replace(/\D/g, '').length * 9 + 6;
+    let h = '', W = 0, H = 0;
+    if (p.tert) {
+      const cx = 150, cy = 110;
+      h += `<text class="d-t big" x="${cx}" y="${cy}">C</text>`;
+      [[cx - 82, cy, 'CH3', cx - 20, cy, cx - 56, cy], [cx, cy - 72, 'CH3', cx, cy - 22, cx, cy - 56], [cx, cy + 74, 'CH3', cx, cy + 20, cx, cy + 54]].forEach(([x, y, t, x1, y1, x2, y2]) => {
+        h += `<path class="d-s" d="M${x1} ${y1} L${x2} ${y2}"/><text class="d-t" x="${x}" y="${y}">${t.replace(/(\d)/g, '<tspan class="sb" dy="6">$1</tspan><tspan dy="-6"></tspan>')}</text>`;
+      });
+      h += `<path class="d-s" d="M${cx + 20} ${cy} L${cx + 56} ${cy}"/><text class="d-t" x="${cx + 84}" y="${cy}">${esc(p.tert)}</text>`;
+      W = 300; H = 220;
+      return { svg: `<svg viewBox="0 0 ${W} ${H}" class="tb-svg" style="max-width:${W * 1.2}px">${h}</svg>` };
+    }
+    const u = p.u, gap = 46, y = 70; let x = 24; const pos = [];
+    u.forEach((x0, i) => { const w = tw(x0.t); if (i) x += gap; pos.push({ x: x + w / 2, w }); x += w; });
+    W = x + 24; const hasBr = u.some(z => z.br); H = hasBr ? 190 : 120;
+    const dirs = [1, -1].filter(d => { const ad = ((ans || '').match(/\d+/g) || []).map(Number).sort((a, b) => a - b); return ad.length && JSON.stringify(locants(u, d)) === JSON.stringify(ad); });
+    const dir = dirs.length ? dirs[0] : 0;
+    const C = u.map((z, i) => /^C/.test(z.t) ? i : -1).filter(i => i >= 0);
+    const sub = t => esc(t).replace(/(\d)/g, '<tspan class="sb" dy="6">$1</tspan><tspan dy="-6">​</tspan>');
+    u.forEach((z, i) => {
+      if (i) {
+        const a = pos[i - 1].x + pos[i - 1].w / 2 + 4, b = pos[i].x - pos[i].w / 2 - 4, bd = z.bond || '-';
+        if (bd === '=') h += `<path class="d-s" d="M${a} ${y - 5} L${b} ${y - 5}"/><path class="d-s" d="M${a} ${y + 3} L${b} ${y + 3}"/>`;
+        else if (bd === '≡') h += `<path class="d-s" d="M${a} ${y - 8} L${b} ${y - 8}"/><path class="d-s" d="M${a} ${y - 1} L${b} ${y - 1}"/><path class="d-s" d="M${a} ${y + 6} L${b} ${y + 6}"/>`;
+        else h += `<path class="d-s" d="M${a} ${y - 1} L${b} ${y - 1}"/>`;
+      }
+      h += `<text class="d-t" x="${pos[i].x}" y="${y}">${sub(z.t)}</text>`;
+      if (z.br) h += `<path class="d-s" d="M${pos[i].x} ${y + 16} L${pos[i].x} ${y + 52}"/><text class="d-t" x="${pos[i].x}" y="${y + 76}">${sub(z.br)}</text>`;
+      if (dir && /^C/.test(z.t)) { const k = C.indexOf(i), n = dir > 0 ? k + 1 : C.length - k; h += `<text class="d-n" x="${pos[i].x}" y="${y - 34}">${n}</text>`; }
+    });
+    if (dir) { const x1 = pos[C[0]].x, x2 = pos[C[C.length - 1]].x, a = dir > 0 ? x1 : x2, b = dir > 0 ? x2 : x1; h += `<path class="d-s red thin" d="M${a} ${y - 58} Q${(a + b) / 2} ${y - 74} ${b} ${y - 58}"/><path class="d-s red thin" d="M${b - 10 * dir} ${y - 66} L${b} ${y - 58} L${b - 12 * dir} ${y - 54}"/>`; }
+    const top = dir ? 0 : 20;
+    return { svg: `<svg viewBox="0 ${top} ${W} ${H - top}" class="tb-svg" style="max-width:${Math.min(W * 1.25, 900)}px">${h}</svg>`, dir };
+  }
+  function schemeSvg(parts) {
+    const fm = t => isFormula(t.replace(/[-–\s]/g, '')) ? esc(t).replace(/(\d)/g, '<tspan class="sb" dy="6">$1</tspan><tspan dy="-6">\u200b</tspan>') : esc(t);
+    let x = 20, h = ''; const y = 78, cw = t => Math.max(22, t.length * 14.5);
+    parts.forEach((p, i) => {
+      if (p.arrow) {
+        const L = Math.max(110, Math.max(p.top ? p.top.length : 0, p.bot ? p.bot.length : 0) * 11 + 30);
+        h += `<path class="d-s" d="M${x} ${y - 8} L${x + L} ${y - 8}"/><path class="d-s" d="M${x + L - 13} ${y - 16} L${x + L} ${y - 8} L${x + L - 13} ${y}"/>`;
+        if (p.top) h += `<text class="d-t sm blue" x="${x + L / 2}" y="${y - 26}">${fm(p.top)}</text>`;
+        if (p.bot) h += `<text class="d-t xs gray" x="${x + L / 2}" y="${y + 18}">${esc(p.bot)}</text>`;
+        x += L + 22;
+      } else if (p.plus) { h += `<text class="d-t" x="${x + 10}" y="${y}">+</text>`; x += 34; }
+      else {
+        const w = cw(p.t || '?');
+        h += p.prod ? `<g class="d-prod" data-x="${x + w / 2}"><text class="d-t q red big" x="${x + 22}" y="${y + 4}">?</text></g>` : `<text class="d-t" x="${x + w / 2}" y="${y}">${fm(p.t)}</text>`;
+        x += p.prod ? 60 : w + 18;
+      }
+    });
+    const W = x + 40;
+    return `<svg viewBox="0 0 ${W} 120" class="tb-svg sch" style="max-width:${Math.min(W * 1.15, 940)}px">${h}</svg>`;
+  }
+  function drawingFor(q) {
+    const ans = q.type === 'mcq' ? q.opts[q.ans] : '';
+    const fm = q.q.match(/\(?[A-Z][A-Za-z0-9()]*(?:\s?[-–=≡]\s?\(?[A-Z][A-Za-z0-9()]*)+|\(?CH\d?\)?[A-Za-z0-9()=≡]{6,}/g);
+    const fx = fm && fm.map(s => s.replace(/[.?:]$/, '')).find(s => isFormula(s.replace(/[-–\s]/g, '')) && (s.match(/C/g) || []).length >= 3);
+    const naming = /name|IUPAC|classify/i.test(q.q);
+    if (fx && naming) { const p = parseChain(fx); if (p) return { kind: 'struct', ...structSvg(p, ans) }; }
+    if (q.type !== 'mcq' || !/predict|product|sequence/i.test(q.q) || !/(ane|ene|yne|ol|ide)\b|CH\d/i.test(ans)) { if (fx) { const p = parseChain(fx); if (p) return { kind: 'struct', ...structSvg(p, ans) }; } return null; }
+    if (/→/.test(q.q)) {
+      const seq = q.q.replace(/^.*?sequence\s*/i, '').replace(/\.$/, '').split(/\s*→\s*/), parts = [];
+      seq.forEach((s, i) => {
+        const rw = /^reaction with (.+)$/i.exec(s);
+        if (rw) { parts.push({ arrow: true, top: rw[1] }, { prod: true }); return; }
+        if (i) parts.push({ arrow: true }); parts.push({ t: s });
+      });
+      if (!parts[parts.length - 1].prod) parts.push({ arrow: true }, { prod: true });
+      return { kind: 'scheme', svg: schemeSvg(parts) };
+    }
+    const after = q.q.replace(/^.*?\b(when|of|from)\b/i, '');
+    const rm = (fx && { 0: fx }) || after.match(NAMEX) || q.q.match(NAMEX); if (!rm) return null;
+    const rg = q.q.match(REAG), cd = q.q.match(COND);
+    let top = rg ? rg[1] : '', bot = cd ? cd[1].replace(/organic /i, '') : '';
+    if (/peroxide/i.test(q.q)) top = (top ? top + ' / ' : '') + 'ROOR';
+    if (top && rm[0].toLowerCase().includes(top.toLowerCase())) top = '';
+    return { kind: 'scheme', svg: schemeSvg([{ t: rm[0] }, { arrow: true, top, bot }, { prod: true }]) };
+  }
+
+  function buildLesson(q, lang) {
+    const S = [], ar = lang === 'ar', ans = q.type === 'mcq' ? q.opts[q.ans] : null, c = findConcept(q), tr = trickOf(q), d = drawingFor(q);
+    S.push({ k: 'q', say: ar ? [{ lang: 'ar', t: G('تعالى نفهم السؤال ده سوا، خطوة بخطوة.', 'تعالي نفهم السؤال ده سوا، خطوة بخطوة.') }, ...splitRuns(q.qa || '')] : [{ lang: 'en', t: "Let's break this question down together, step by step." }, { lang: 'en', t: q.q }] });
+    if (d) S.push({ k: 'draw', d, say: ar ? [{ lang: 'ar', t: 'خلّيني أرسمهالك الأول عشان تبان.' }] : [{ lang: 'en', t: 'Let me sketch it first, so you can see it.' }] });
+    if (c) S.push({ k: 'idea', text: ar ? c.ar : c.en, say: ar ? [{ lang: 'ar', t: 'بص يا سيدي، الفكرة كلها هنا:' }, ...splitRuns(stripB(c.ar))] : [{ lang: 'en', t: "Here's the key idea." }, { lang: 'en', t: stripB(c.en) }] });
+    const ex = ar ? q.ea : q.e;
+    sentences(ex).forEach(s => {
+      const ch = chainParts(s);
+      if (ch.length > 1) S.push({ k: 'chain', parts: ch, say: ch.flatMap((p, i) => (ar ? splitRuns((i ? 'يعني ' : '') + p) : [{ lang: 'en', t: (i ? 'so, ' : '') + p }])) });
+      else S.push({ k: 'line', text: s, say: ar ? splitRuns(s) : [{ lang: 'en', t: s }] });
+    });
+    if (ans) S.push({ k: 'ans', ans, say: ar ? [{ lang: 'ar', t: 'يبقى الإجابة الصح:' }, { lang: 'en', t: ans }] : [{ lang: 'en', t: 'So, the correct answer is: ' + ans }] });
+    else if (q.ans && q.ans.length) S.push({ k: 'ess', pts: q.ans, say: ar ? [{ lang: 'ar', t: 'والإجابة النموذجية نقطتين:' }, ...q.ans.map(p => ({ lang: 'en', t: p }))] : [{ lang: 'en', t: 'The model answer has two points.' }, ...q.ans.map(p => ({ lang: 'en', t: p }))] });
+    if (tr) S.push({ k: 'trick', text: tr, say: [{ lang: ar ? 'ar' : 'en', t: ar ? 'وخد الحيلة دي عشان متتنسيش:' : "And here's a trick so you never forget it." }, ...splitRuns(stripB(tr))] });
+    S.push({ k: 'end', say: ar ? [{ lang: 'ar', t: G('ها، فهمت كده؟', 'ها، فهمتي كده؟') }] : [{ lang: 'en', t: 'So, does it make sense now?' }] });
+    return S;
+  }
+
+  function mountStep(s) {
+    const box = document.createElement('div'); box.className = 'tb-step k-' + s.k;
+    const ar = TB.lang === 'ar';
+    if (s.k === 'q') box.innerHTML = `<div class="tb-tag">📌 ${esc(TB.q.tag || '')}</div><div class="tb-qt" dir="ltr">${wordsHtml(TB.q.q)}</div>`;
+    else if (s.k === 'draw') box.innerHTML = `<div class="tb-drawbox">${s.d.svg}</div>`;
+    else if (s.k === 'idea') box.innerHTML = `<div class="tb-idea"><span class="tb-bulb">💡</span><div class="tb-tx" dir="${ar ? 'rtl' : 'ltr'}">${wordsHtml(s.text)}</div></div>`;
+    else if (s.k === 'line') box.innerHTML = `<div class="tb-tx" dir="${ar ? 'rtl' : 'ltr'}"><span class="tb-dot"></span>${wordsHtml(s.text)}</div>`;
+    else if (s.k === 'chain') box.innerHTML = s.parts.map((p, i) => (i ? '<div class="tb-arr"><svg viewBox="0 0 30 40"><path class="d-s" d="M15 3 Q12 18 15 33"/><path class="d-s" d="M8 26 L15 35 L22 26"/></svg></div>' : '') + `<div class="tb-tx" dir="${ar ? 'rtl' : 'ltr'}">${wordsHtml(p)}</div>`).join('');
+    else if (s.k === 'ans') box.innerHTML = `<div class="tb-ans" dir="${ar ? 'rtl' : 'ltr'}"><span class="tb-tick">✔</span><span class="tw">${ar ? 'الإجابة:' : 'Answer:'}</span> <span class="tb-av" dir="ltr">${wordsHtml(s.ans, { kw: false })}</span></div>`;
+    else if (s.k === 'ess') box.innerHTML = `<div class="tb-ans" dir="ltr">${s.pts.map((p, i) => `<div><span class="tb-tick">${i + 1}</span><span class="tb-av">${wordsHtml(p, { kw: false })}</span></div>`).join('')}</div>`;
+    else if (s.k === 'trick') box.innerHTML = `<div class="tb-note" dir="rtl"><div class="tb-tape"></div><div class="tb-nh">🧠 ${ar ? 'حيلة تفتكرها بيها' : 'Memory trick'}</div><div class="tb-tx">${wordsHtml(s.text)}</div></div>`;
+    else if (s.k === 'end') box.innerHTML = `<div class="tb-endq">${ar ? G('فهمت كده؟', 'فهمتي كده؟') : 'Got it?'}</div><div class="tb-endb"><button type="button" class="tb-ok">✔ ${ar ? G('أيوه فهمت', 'أيوه فهمت') : 'Yes, got it'}</button><button type="button" class="tb-again">🔁 ${ar ? 'اشرحها تاني' : 'Explain again'}</button>${ar ? '<button type="button" class="tb-swap">🇬🇧 English</button>' : '<button type="button" class="tb-swap">🇪🇬 بالعربي</button>'}</div>`;
+    $('tbInner').appendChild(box);
+    const ok = box.querySelector('.tb-ok'); if (ok) ok.onclick = () => teachClose(true);
+    const ag = box.querySelector('.tb-again'); if (ag) ag.onclick = () => runFrom(0, true);
+    const sw = box.querySelector('.tb-swap'); if (sw) sw.onclick = () => setLang(TB.lang === 'ar' ? 'en' : 'ar');
+    return box;
+  }
+  function finishStep(box, s) {
+    box.classList.add('on');
+    box.querySelectorAll('.tw').forEach(w => w.classList.add('on'));
+    box.querySelectorAll('.d-s, .d-t, .d-n').forEach(e => { e.style.transition = 'none'; e.classList.add('on'); e.style.strokeDashoffset = 0; });
+    decorate(box, s, false);
+  }
+  function showUpTo(i) {
+    if (TB.mounted === i && $('tbInner').children.length === i) return;
+    $('tbInner').innerHTML = ''; TB.sch = null;
+    for (let k = 0; k < i; k++) finishStep(mountStep(TB.steps[k]), TB.steps[k]);
+    TB.mounted = i;
+  }
+  function boardEl() { return $('tbBoard'); }
+  function penTo(el, rtl, inst) {
+    const P = $('tbPen'), B = boardEl(); if (!P || !el) return;
+    const r = el.getBoundingClientRect(), b = B.getBoundingClientRect();
+    const x = (rtl ? r.left : r.right) - b.left + B.scrollLeft, y = r.bottom - b.top + B.scrollTop - 6;
+    P.style.transition = inst ? 'none' : '';
+    P.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`; P.classList.add('on');
+  }
+  function penOff() { const P = $('tbPen'); if (P) P.classList.remove('on'); }
+  function keepVisible(el) {
+    const B = boardEl(); if (!B || !el) return;
+    const r = el.getBoundingClientRect(), b = B.getBoundingClientRect(), pad = 60;
+    if (r.bottom > b.bottom - pad) B.scrollTo({ top: B.scrollTop + (r.bottom - b.bottom) + pad + 40, behavior: 'smooth' });
+    else if (r.top < b.top + 10) B.scrollTo({ top: B.scrollTop - (b.top - r.top) - 30, behavior: 'smooth' });
+  }
+  function reveal(spans, dur, g) {
+    let fast = false, i = 0, kick = null;
+    const tot = spans.reduce((a, w) => a + w.textContent.length + 1, 0) || 1;
+    const p = new Promise(res => {
+      const nxt = () => {
+        if (g !== TB.gen) return res();
+        if (i >= spans.length) { penOff(); return res(); }
+        const w = spans[i++], rtl = w.closest('[dir="rtl"]') && !w.closest('[dir="ltr"]');
+        w.classList.add('on'); penTo(w, rtl); if (i % 4 === 1) keepVisible(w);
+        const d = fast ? 22 : Math.max(55, dur * (w.textContent.length + 1) / tot);
+        kick = setTimeout(nxt, d);
+      };
+      nxt();
+    });
+    return { p, fast() { fast = true; } };
+  }
+  function svgDraw(box, dur, g) {
+    const els = [...box.querySelectorAll('.d-s, .d-t, .d-n')];
+    els.forEach(e => { if (e.classList.contains('d-s')) { let L = 100; try { L = e.getTotalLength(); } catch {} e.style.strokeDasharray = L; e.style.strokeDashoffset = L; } });
+    return new Promise(res => {
+      let i = 0; const per = Math.max(110, Math.min(420, dur / Math.max(1, els.length)));
+      const nxt = () => {
+        if (g !== TB.gen) return res();
+        if (i >= els.length) { penOff(); return res(); }
+        const e = els[i++];
+        e.style.transition = e.classList.contains('d-s') ? `stroke-dashoffset ${per * 1.6}ms cubic-bezier(.5,0,.3,1)` : '';
+        requestAnimationFrame(() => { e.classList.add('on'); if (e.classList.contains('d-s')) e.style.strokeDashoffset = 0; });
+        const r = e.getBoundingClientRect(), b = boardEl().getBoundingClientRect(), P = $('tbPen');
+        if (P) { P.style.transform = `translate(${(r.right - b.left).toFixed(1)}px, ${(r.bottom - b.top + boardEl().scrollTop - 4).toFixed(1)}px)`; P.classList.add('on'); }
+        if (e.classList.contains('d-n')) sfx('tick');
+        setTimeout(nxt, per);
+      };
+      nxt();
+    });
+  }
+  function rough(kind, r, b) {
+    const x = r.left - b.left, y = r.top - b.top, w = r.width, h = r.height, j = () => (Math.random() - .5) * 4;
+    if (kind === 'u') { const yy = y + h + 3; return `M${x - 2} ${yy + j()} Q${x + w * .3} ${yy + 5 + j()} ${x + w * .55} ${yy + 1 + j()} T${x + w + 4} ${yy + 2 + j()}`; }
+    const cx = x + w / 2, cy = y + h / 2, rx = w / 2 + 11, ry = h / 2 + 8;
+    return `M${cx + rx * .2} ${cy - ry - 2} C${cx + rx * 1.05} ${cy - ry * 1.05}, ${cx + rx * 1.1} ${cy + ry * .9}, ${cx + j()} ${cy + ry + j()} C${cx - rx * 1.1} ${cy + ry * 1.05}, ${cx - rx * 1.08} ${cy - ry * .95}, ${cx + rx * .1} ${cy - ry - 4} L${cx + rx * .45} ${cy - ry + 2}`;
+  }
+  function overlayPath(box, d, cls, anim) {
+    let O = box.querySelector(':scope > svg.tb-ov');
+    if (!O) { O = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); O.setAttribute('class', 'tb-ov'); box.appendChild(O); }
+    const p = document.createElementNS('http://www.w3.org/2000/svg', 'path'); p.setAttribute('d', d); p.setAttribute('class', cls); O.appendChild(p);
+    let L = 300; try { L = p.getTotalLength(); } catch {}
+    p.style.strokeDasharray = L; p.style.strokeDashoffset = anim ? L : 0;
+    if (anim) requestAnimationFrame(() => requestAnimationFrame(() => { p.style.transition = 'stroke-dashoffset .62s cubic-bezier(.5,0,.25,1)'; p.style.strokeDashoffset = 0; }));
+    return p;
+  }
+  function decorate(box, s, anim) {
+    const b = box.getBoundingClientRect();
+    if (['line', 'idea', 'q', 'chain'].includes(s.k)) {
+      const kws = [...box.querySelectorAll('.tw.kw')].sort((a, c) => c.textContent.length - a.textContent.length).slice(0, s.k === 'q' ? 2 : 1);
+      kws.forEach(w => overlayPath(box, rough('u', w.getBoundingClientRect(), b), 'ov-u', anim));
+    }
+    if (s.k === 'ans') {
+      const av = box.querySelector('.tb-av'); if (av) overlayPath(box, rough('o', av.getBoundingClientRect(), b), 'ov-o', anim);
+      const pr = document.querySelector('#tbInner .d-prod');
+      if (pr && !pr.dataset.done) {
+        pr.dataset.done = '1';
+        const t = pr.querySelector('text'); const x = +pr.dataset.x || +t.getAttribute('x');
+        t.classList.add('gone');
+        const n = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        n.setAttribute('x', +t.getAttribute('x') - 4 + s.ans.length * 7); n.setAttribute('y', '78'); n.setAttribute('class', 'd-t green on pop'); n.textContent = s.ans;
+        pr.appendChild(n);
+        const sv = pr.ownerSVGElement, vb = sv.viewBox.baseVal, need = (+t.getAttribute('x') - 4) + s.ans.length * 14.5 + 30;
+        if (need > vb.width) { sv.setAttribute('viewBox', `${vb.x} ${vb.y} ${need} ${vb.height}`); sv.style.maxWidth = Math.min(need * 1.15, 940) + 'px'; }
+      }
+    }
+    if (s.k === 'trick' && anim) sfx('pop');
+  }
+  async function animateStep(k, g) {
+    const s = TB.steps[k], box = mountStep(s); TB.mounted = k + 1;
+    requestAnimationFrame(() => box.classList.add('on'));
+    keepVisible(box);
+    const spans = [...box.querySelectorAll('.tw')];
+    if (s.k === 'ans') { act('wave', 1200); mood('happy', 1800); }
+    if (s.k === 'trick') act('jump', 900);
+    if (s.k === 'end') { mood('happy', 2500); act('wave', 1200); }
+    const sayList = s.say.filter(r => (r.lang === 'en' ? speakable(r.t) : arSpeak(r.t)).trim());
+    const totChars = sayList.reduce((a, r) => a + spk(r).length, 0);
+    const useVoice = TB.snd && SY && sayList.length;
+    const estMs = r => spk(r).length / (VO.cps[r.lang] * VO.rate) * 1000;
+    let rv = null, svgP = null;
+    const startDraw = (msTotal) => {
+      if (rv || svgP) return;
+      if (s.k === 'draw') svgP = svgDraw(box, msTotal, g);
+      else rv = reveal(spans, Math.max(300, msTotal * .9), g);
+    };
+    if (useVoice) {
+      const total = sayList.reduce((a, r) => a + estMs(r), 0);
+      const first = sayList[0];
+      const lead = s.k === 'q' || s.k === 'draw' || s.k === 'idea' || s.k === 'trick' || s.k === 'ans' ? estMs(first) * .55 : 0;
+      let fb = setTimeout(() => startDraw(total - lead), 1300 + lead);
+      for (let i = 0; i < sayList.length; i++) {
+        const r = sayList[i];
+        const x = await utter(spk(r), r.lang, { onstart: () => { if (i === 0) { clearTimeout(fb); fb = setTimeout(() => startDraw(total - lead), lead); } } });
+        if (g !== TB.gen) { clearTimeout(fb); return; }
+        if (x === 'nv' || x === 'skip') { if (i === 0) { clearTimeout(fb); startDraw(Math.max(900, totChars * 70)); } await pause_(Math.min(1800, spk(r).length * 45)); }
+      }
+      clearTimeout(fb); startDraw(600);
+      if (rv) rv.fast();
+      await (rv ? rv.p : svgP);
+    } else {
+      const chars = s.k === 'draw' ? 60 : spans.reduce((a, w) => a + w.textContent.length + 1, 0);
+      startDraw(Math.max(700, chars * (TB.lang === 'ar' ? 62 : 48)));
+      await (rv ? rv.p : svgP);
+      if (g !== TB.gen) return;
+      await pause_(Math.min(3800, 600 + chars * 32));
+    }
+    if (g !== TB.gen) return;
+    penOff(); decorate(box, s, true);
+    await pause_(s.k === 'ans' || s.k === 'draw' ? 700 : 350);
+  }
+  function ui() {
+    const el = TB.el; if (!el) return;
+    el.querySelector('.tb-play').innerHTML = TB.playing ? '❚❚' : '▶';
+    el.querySelector('.tb-play').setAttribute('aria-label', TB.playing ? 'pause' : 'play');
+    el.querySelector('.tb-snd').textContent = TB.snd ? '🔊' : '🔇';
+    el.querySelector('.tb-snd').classList.toggle('off', !TB.snd);
+    el.querySelectorAll('.tb-lg button').forEach(b => b.classList.toggle('on', b.dataset.l === TB.lang));
+    el.querySelector('.tb-spd').textContent = VO.rate > .9 ? '1×' : '0.8×';
+    el.querySelector('.tb-dots').innerHTML = TB.steps.map((s, i) => `<i class="${i < TB.i ? 'd' : i === TB.i ? 'c' : ''}"></i>`).join('');
+    el.querySelector('.tb-sub').textContent = TB.playing ? (TB.snd ? G('بشرحلك…', 'بشرحلك…') : 'اقرا معايا…') : 'متوقف';
+  }
+  async function runFrom(i, anim = true) {
+    const g = ++TB.gen; voiceStop();
+    i = Math.max(0, Math.min(TB.steps.length - 1, i));
+    TB.paused = false; TB.playing = true; TB.i = i; showUpTo(i); ui();
+    for (let k = i; k < TB.steps.length; k++) {
+      TB.i = k; ui();
+      await animateStep(k, g); if (g !== TB.gen) return;
+      if (k < TB.steps.length - 1) { await pause_(TB.snd ? 260 : 500); if (g !== TB.gen) return; }
+    }
+    TB.playing = false; TB.i = TB.steps.length; ui(); penOff();
+  }
+  function teachPause() { TB.gen++; voiceStop(); penOff(); TB.playing = false; TB.paused = true; ui(); }
+  function showStatic(i) {
+    TB.gen++; voiceStop(); penOff(); TB.playing = false; TB.paused = true;
+    i = Math.max(0, Math.min(TB.steps.length - 1, i));
+    showUpTo(i); const s = TB.steps[i], box = mountStep(s); finishStep(box, s); TB.mounted = i + 1; TB.i = i; keepVisible(box); ui();
+  }
+  function teachToggle() { if (TB.playing) teachPause(); else runFrom(TB.paused ? Math.min(TB.i, TB.steps.length - 1) : 0); }
+  function setLang(l) { if (TB.lang === l) return; TB.lang = l; ls('tlang', l); TB.steps = buildLesson(TB.q, l); TB.mounted = -1; if (l === 'ar' && TB.snd && !pickV('ar')) toastTB('جهازك مفيهوش صوت عربي، هتلاقي الشرح مكتوب 👇 أو اختار English'); runFrom(0); }
+  function toastTB(m) { const t = TB.el && TB.el.querySelector('.tb-toast'); if (!t) return; t.textContent = m; t.classList.add('on'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('on'), 4200); }
+  function teacherSpot() {
+    size();
+    const mob = innerWidth < 760, s = mob ? 1.15 : 1.75, w = st.w * s, h = st.h * s;
+    const bar = TB.el ? TB.el.querySelector('.tb-bar').getBoundingClientRect() : { top: innerHeight - 70 };
+    return { x: mob ? 10 : Math.max(16, (TB.el ? TB.el.querySelector('.tb-frame').getBoundingClientRect().left : 0) + 22), y: bar.top - h - (mob ? 4 : 10), s };
+  }
+  function boardHtml() {
+    const ar = TB.lang === 'ar';
+    return `<div class="tb-frame"><div class="tb-top"><div class="tb-ttl"><span class="tb-cap">🎓</span><div><b>${G('أستاذ أورجي', 'أستاذ أورجي')}</b><span class="tb-sub"></span></div></div>
+      <div class="tb-tools"><div class="tb-lg" role="group"><button type="button" data-l="ar">ع</button><button type="button" data-l="en">EN</button></div>
+      <button type="button" class="tb-snd" title="الصوت"></button><button type="button" class="tb-spd" title="السرعة"></button><button type="button" class="tb-x" title="قفل">✕</button></div></div>
+      <div class="tb-board" id="tbBoard"><div class="tb-inner" id="tbInner"></div><div class="tb-pen" id="tbPen"><svg viewBox="0 0 40 120"><defs><linearGradient id="tbPg" x1="0" x2="1"><stop offset="0" stop-color="#1e40af"/><stop offset=".5" stop-color="#3b82f6"/><stop offset="1" stop-color="#1e3a8a"/></linearGradient></defs><path d="M20 118 L13 96 L27 96 Z" fill="#1f2a44"/><rect x="11" y="40" width="18" height="58" rx="3" fill="url(#tbPg)"/><rect x="10" y="4" width="20" height="40" rx="5" fill="#f8fafc" stroke="#cbd5e1"/><rect x="10" y="30" width="20" height="5" fill="#1e40af"/></svg></div></div>
+      <div class="tb-bar"><div class="tb-ctl"><button type="button" class="tb-prev" aria-label="previous">⏮</button><button type="button" class="tb-play"></button><button type="button" class="tb-next" aria-label="next">⏭</button></div><div class="tb-dots"></div><button type="button" class="tb-rst" title="من الأول">↺</button></div>
+      <div class="tb-tray"><i style="--c:#1e40af"></i><i style="--c:#e03131"></i><i style="--c:#2b8a3e"></i><span class="tb-eraser"></span></div>
+      <div class="tb-toast"></div></div>`;
+  }
+  async function teach() {
+    const q = curQ(); if (!q || st.teach) return;
+    ttsStop(); hide(); SELB.classList.remove('on');
+    st.teach = true; st.att = true; TB.q = q;
+    if (!TB.snd || !SY) { if (SY) { try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; SY.speak(u); } catch {} } }
+    else { const lg = TB.lang === 'ar' && pickV('ar') ? 'ar' : 'en'; utter(lg === 'ar' ? 'حاضر!' : 'Sure!', lg); }
+    const r = SVG.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, R = Math.hypot(Math.max(cx, innerWidth - cx), Math.max(cy, innerHeight - cy)) + 40;
+    sfx('magic'); act('spin', 900); burst(setup.gender || ''); IN.classList.add('teach'); talkOn(); mood('happy', 1400);
+    const el = document.createElement('div'); el.id = 'tBoard'; el.innerHTML = boardHtml(); TB.el = el;
+    el.style.clipPath = el.style.webkitClipPath = `circle(0px at ${cx}px ${cy}px)`;
+    document.body.appendChild(el); document.body.classList.add('inlo-front', 'tb-lock');
+    el.querySelector('.tb-x').onclick = () => teachClose(false);
+    el.querySelector('.tb-play').onclick = teachToggle;
+    el.querySelector('.tb-next').onclick = () => { const n = Math.min(TB.steps.length - 1, (TB.playing ? TB.i : TB.i) + 1); TB.playing ? runFrom(n) : showStatic(n); };
+    el.querySelector('.tb-prev').onclick = () => { const n = Math.max(0, TB.i - 1); TB.playing ? runFrom(n) : showStatic(n); };
+    el.querySelector('.tb-rst').onclick = () => runFrom(0);
+    el.querySelector('.tb-snd').onclick = () => { TB.snd = !TB.snd; ls('tsnd', TB.snd ? '1' : '0'); if (TB.playing) runFrom(TB.i); else ui(); };
+    el.querySelector('.tb-spd').onclick = () => { VO.rate = VO.rate > .9 ? .8 : .94; ls('rate', String(VO.rate)); if (TB.playing) runFrom(TB.i); else ui(); };
+    el.querySelectorAll('.tb-lg button').forEach(b => b.onclick = () => setLang(b.dataset.l));
+    TB.steps = buildLesson(q, TB.lang); TB.i = 0; TB.mounted = -1; ui();
+    await pause_(260);
+    const an = el.animate([{ clipPath: `circle(0px at ${cx}px ${cy}px)` }, { clipPath: `circle(${R}px at ${cx}px ${cy}px)` }], { duration: 780, easing: 'cubic-bezier(.75,0,.2,1)', fill: 'forwards' });
+    setTimeout(() => el.classList.add('in'), 380);
+    await an.finished.catch(() => {});
+    el.style.clipPath = el.style.webkitClipPath = 'none';
+    const p = teacherSpot(); await flyTo(p.x, p.y, { s: p.s, dur: 950, silent: true, arc: 60 });
+    if (!st.teach) return;
+    lookAt($('tbInner'), 1500);
+    if (TB.lang === 'ar' && TB.snd && !pickV('ar')) toastTB('جهازك مفيهوش صوت عربي، هتلاقي الشرح مكتوب 👇 أو اختار English');
+    runFrom(0);
+  }
+  async function teachClose(happy) {
+    if (!st.teach || !TB.el) return;
+    TB.gen++; ttsStop(true); VO.on = false; clearInterval(VO.mt); penOff();
+    const el = TB.el; TB.el = null;
+    const t = target(), cx = t.x + st.w / 2, cy = t.y + st.h / 2, R = Math.hypot(innerWidth, innerHeight);
+    el.classList.remove('in'); el.classList.add('out');
+    IN.classList.remove('teach', 'talk');
+    flyTo(t.x, t.y, { s: 1, dur: 800, silent: true });
+    const an = el.animate([{ clipPath: `circle(${R}px at ${cx}px ${cy}px)` }, { clipPath: `circle(0px at ${cx}px ${cy}px)` }], { duration: 640, easing: 'cubic-bezier(.6,0,.3,1)', fill: 'forwards' });
+    await an.finished.catch(() => {});
+    el.remove(); document.body.classList.remove('inlo-front', 'tb-lock');
+    st.teach = false; st.att = false; st.nextRoam = now() + 9000; mood(baseMood());
+    SVG.querySelectorAll('.m-o').forEach(m => m.style.transform = '');
+    if (happy) { if (window.confetti) confetti(36); act('jump', 900); mood('happy', 2200); setTimeout(() => say(pickOne([G('عاش يا بطل! 🔥', 'عاش يا بطلة! 🌸'), 'كده تمام 😎👌', G('أيوه كده! 💪', 'أيوه كده! 💖')]), { ms: 2600 }), 650); }
+  }
+  window.orgyTeach = () => teach();
+  addEventListener('keydown', e => { if (!st.teach) return; if (e.key === 'Escape') teachClose(false); else if (e.key === ' ' && !/INPUT|TEXTAREA|BUTTON/.test(document.activeElement.tagName)) { e.preventDefault(); teachToggle(); } });
+  addEventListener('resize', () => { if (!st.teach || !TB.el) return; const p = teacherSpot(); flyTo(p.x, p.y, { s: p.s, dur: 300, silent: true }); });
+
   window.inloEvt = function (type, d) {
     if (type === 'view') {
+      if (VO.on && !st.teach) ttsStop();
       if (d !== 'exam') setProctor(false);
       if (st.busy) hide();
       IN.classList.toggle('away', d === 'dua' || d === 'admin' || !!st.hidden);
@@ -2050,7 +2881,7 @@ flushPending();
       return;
     }
     if (type === 'question') {
-      st.qShown = now(); st.idleNag = false; st.lastTalk = 0; if (exam.i > 0) hide();
+      if (VO.on && !st.teach) ttsStop(); st.qShown = now(); st.idleNag = false; st.lastTalk = 0; if (exam.i > 0) hide();
       ['inloTr', 'inloEx'].forEach(id => { const w = $(id); if (w) w.remove(); });
       if (st.proctor && !st.sleep && !st.attDone && !ls('att') && exam.answers.filter(a => a.q.type === 'mcq').length === 10) { st.attDone = true; setTimeout(attendance, 650); }
       lookAt($('qText'), 1200); return;
@@ -2066,6 +2897,7 @@ flushPending();
       return;
     }
     if (type === 'finish') {
+      if (VO.on && !st.teach) ttsStop();
       const wasProctor = st.proctor; setProctor(false);
       if (st.sleep) return;
       const { pct, wrong, retry } = d;
