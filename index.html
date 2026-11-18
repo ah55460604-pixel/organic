@@ -229,6 +229,14 @@
           <div class="font-semibold">📚 Question Bank <span class="tag" style="margin-left:6px;color:var(--acc);border-color:var(--acc)">NEW</span></div>
           <div class="nm mt-1">Comprehensive revision bank — 48 new MCQs (exact formative repeats removed)</div>
         </button>
+        <button type="button" class="tile" style="--c:var(--acc);min-height:auto" data-mode="name">
+          <div class="font-semibold">🏷️ Nomenclature only</div>
+          <div class="nm mt-1">IUPAC naming questions only — <span id="nameCnt"></span> questions</div>
+        </button>
+        <button type="button" class="tile" style="--c:var(--acc);min-height:auto" data-mode="noname">
+          <div class="font-semibold">🧪 Without nomenclature</div>
+          <div class="nm mt-1">Everything except the naming questions</div>
+        </button>
       </div>
     </div>
 
@@ -708,8 +716,9 @@ const fmtTime = (s) => `${String(Math.floor(s / 60)).padStart(2,'0')}:${String(s
 const scopeOf = (k) => SCOPES.find(s => s.key === k) || SCOPES[0];
 const diffLabel = (k) => k === 'mixed' ? 'Mixed' : ((DIFFS.find(d => d.key === k) || {}).label || k);
 const SIM_MCQ = 32, SIM_ESSAY = 2;
-const poolFor = (scope) => QUESTIONS.filter(q => (scope === 'ALL' || q.scope === scope) && (setup.mode === 'qb' ? q.src === 'qb' : (q.src !== 'qb' || scope === 'ALL')) && (
-  setup.mode === 'qb' ? true : setup.mode === 'essay' ? (q.type === 'essay' && q.src === 'bank') : ((setup.mode !== 'mcq' || q.type === 'mcq') && (setup.source !== 'bank' || q.src !== 'lecture'))));
+const isNaming = (q) => /IUPAC|nomenclature|correct name|systematic name/i.test(q.q);
+const poolFor = (scope) => QUESTIONS.filter(q => (scope === 'ALL' || q.scope === scope) && (setup.mode === 'name' ? isNaming(q) : setup.mode === 'noname' ? !isNaming(q) && (q.src !== 'qb' || scope === 'ALL') && (setup.source !== 'bank' || q.src !== 'lecture') : true) && (setup.mode === 'qb' ? q.src === 'qb' : (setup.mode === 'name' || q.src !== 'qb' || scope === 'ALL')) && (
+  setup.mode === 'qb' || setup.mode === 'name' || setup.mode === 'noname' ? true : setup.mode === 'essay' ? (q.type === 'essay' && q.src === 'bank') : ((setup.mode !== 'mcq' || q.type === 'mcq') && (setup.source !== 'bank' || q.src !== 'lecture'))));
 function showView(name) {
   ['setup','dua','exam','result','admin'].forEach(v => $('view-' + v).classList.toggle('hidden-view', v !== name));
   const wasIslamic = document.body.classList.contains('islamic');
@@ -828,7 +837,7 @@ function watchVisits() {
 
 const setup = { name: '', gender: '', scope: 'ALL', count: 10, diff: 'medium', source: 'mix', mode: 'custom' };
 try { setup.source = localStorage.getItem('orgc_source') === 'bank' ? 'bank' : 'mix'; } catch {}
-try { const m = localStorage.getItem('orgc_mode'); if (m === 'essay' || m === 'sim' || m === 'mcq' || m === 'qb') setup.mode = m; } catch {}
+try { const m = localStorage.getItem('orgc_mode'); if (m === 'essay' || m === 'sim' || m === 'mcq' || m === 'qb' || m === 'name' || m === 'noname') setup.mode = m; } catch {}
 if (setup.mode === 'essay') setup.count = 5;
 try { setup.gender = localStorage.getItem('orgc_gender') || ''; } catch {}
 try { setup.name = localStorage.getItem('orgc_name') || ''; } catch {}
@@ -859,11 +868,12 @@ function renderSetup() {
   document.querySelectorAll('#modeChoices [data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === setup.mode));
   $('secScope').classList.toggle('hidden', setup.mode === 'sim');
   $('secCount').classList.toggle('hidden', setup.mode === 'sim');
-  $('secSource').classList.toggle('hidden', setup.mode !== 'custom' && setup.mode !== 'mcq');
-  $('secDiff').classList.toggle('hidden', setup.mode !== 'custom' && setup.mode !== 'mcq' && setup.mode !== 'qb');
+  $('secSource').classList.toggle('hidden', setup.mode !== 'custom' && setup.mode !== 'mcq' && setup.mode !== 'noname');
+  $('secDiff').classList.toggle('hidden', setup.mode !== 'custom' && setup.mode !== 'mcq' && setup.mode !== 'qb' && setup.mode !== 'noname');
+  if ($('nameCnt')) $('nameCnt').textContent = QUESTIONS.filter(isNaming).length;
   if (setup.mode === 'sim') { $('summary').innerHTML = `🎓 Exam simulation · <span class="font-mono">${SIM_MCQ}</span> MCQs + <span class="font-mono">${SIM_ESSAY}</span> short-answer · random from the whole bank`; return; }
   if (setup.mode === 'essay') { $('summary').innerHTML = `✍️ Short-answer only · <span class="font-mono">${setup.count}</span> questions · ${s.label}`; return; }
-  $('summary').innerHTML = `${setup.mode === 'qb' ? '📚 Question Bank · ' : setup.source === 'bank' ? '📘 Bank only · ' : ''}<span class="font-mono">${setup.count}</span> questions · ${s.label}${s.key !== 'ALL' ? ' — ' + s.sub : ''} · ${setup.count >= max ? 'all levels' : diffLabel(setup.diff)}`;
+  $('summary').innerHTML = `${setup.mode === 'qb' ? '📚 Question Bank · ' : setup.mode === 'name' ? '🏷️ Nomenclature only · ' : setup.mode === 'noname' ? '🧪 Without nomenclature · ' + (setup.source === 'bank' ? 'Bank only · ' : '') : setup.source === 'bank' ? '📘 Bank only · ' : ''}<span class="font-mono">${setup.count}</span> questions · ${s.label}${s.key !== 'ALL' ? ' — ' + s.sub : ''} · ${setup.count >= max ? 'all levels' : diffLabel(setup.diff)}`;
 }
 $('studentName').addEventListener('input', () => {
   setup.name = $('studentName').value.trim().replace(/\s+/g, ' ').slice(0, 30);
@@ -1219,7 +1229,7 @@ function finishExam() {
   exam.finished = true; if (exam.fromResume) resumeClear();
   const total = exam.qs.length, pct = Math.round((exam.score / total) * 1000) / 10;
   const dur = Math.floor((Date.now() - exam.start) / 1000), n = setup.name, s = scopeOf(setup.scope);
-  const fullBank = !exam.isRetry && (setup.mode === 'custom' || setup.mode === 'mcq' || setup.mode === 'qb') && setup.scope === 'ALL' && total === poolFor('ALL').length && exam.score === total;
+  const fullBank = !exam.isRetry && (setup.mode === 'custom' || setup.mode === 'mcq' || setup.mode === 'qb' || setup.mode === 'noname') && setup.scope === 'ALL' && total === poolFor('ALL').length && exam.score === total;
   let msg;
   if (fullBank) msg = `ما شاء الله، تبارك الرحمن ${G('عليك', 'عليكي')} ${G('جبت', 'جبتي')} البنك في شوال 👏`;
   else if (pct === 100) msg = `فُل مارك${YA(n)}! ما شاء الله تبارك الله ${G('🎉', '💖')}`;
@@ -1233,9 +1243,9 @@ function finishExam() {
   $('resPct').style.color = pct >= 75 ? 'var(--acc)' : pct >= 50 ? 'var(--amber)' : 'var(--rose)';
   $('resScore').textContent = `${exam.score} / ${total} correct`;
   $('resMsg').textContent = msg;
-  const modeLabel = setup.mode === 'sim' ? `Exam simulation (${SIM_MCQ} MCQ + ${SIM_ESSAY} short-answer)` : setup.mode === 'essay' ? s.label + ' (short-answer only)' : s.label + (setup.mode === 'qb' ? ' (Question Bank)' : (setup.mode === 'mcq' ? ' (MCQ only)' : '') + (setup.source === 'bank' ? ' (bank only)' : ''));
-  $('resScope').textContent = setup.mode === 'sim' ? 'Exam simulation' : setup.mode === 'essay' ? s.label + ' · short-answer only' : s.label + (setup.mode === 'qb' ? ' · Question Bank' : setup.mode === 'mcq' ? ' · MCQ only' : (s.key !== 'ALL' ? ' · ' + s.sub : ''));
-  $('resDiff').textContent = (setup.mode !== 'custom' && setup.mode !== 'mcq' && setup.mode !== 'qb') ? 'Mixed' : (total >= poolFor(setup.scope).length && !exam.isRetry ? 'All levels' : diffLabel(setup.diff));
+  const modeLabel = setup.mode === 'sim' ? `Exam simulation (${SIM_MCQ} MCQ + ${SIM_ESSAY} short-answer)` : setup.mode === 'essay' ? s.label + ' (short-answer only)' : s.label + (setup.mode === 'qb' ? ' (Question Bank)' : setup.mode === 'name' ? ' (Nomenclature only)' : setup.mode === 'noname' ? ' (Without nomenclature)' : (setup.mode === 'mcq' ? ' (MCQ only)' : '') + (setup.source === 'bank' ? ' (bank only)' : ''));
+  $('resScope').textContent = setup.mode === 'sim' ? 'Exam simulation' : setup.mode === 'essay' ? s.label + ' · short-answer only' : s.label + (setup.mode === 'qb' ? ' · Question Bank' : setup.mode === 'name' ? ' · Nomenclature only' : setup.mode === 'noname' ? ' · Without nomenclature' : setup.mode === 'mcq' ? ' · MCQ only' : (s.key !== 'ALL' ? ' · ' + s.sub : ''));
+  $('resDiff').textContent = (setup.mode !== 'custom' && setup.mode !== 'mcq' && setup.mode !== 'qb' && setup.mode !== 'noname') ? 'Mixed' : (total >= poolFor(setup.scope).length && !exam.isRetry ? 'All levels' : diffLabel(setup.diff));
   $('resTime').textContent = fmtTime(dur);
   $('resStreak').textContent = exam.best + ' 🔥';
   $('reviewList').classList.add('hidden'); $('reviewToggle').textContent = 'Review answers';
@@ -1256,7 +1266,7 @@ function finishExam() {
   if (window.inloEvt) inloEvt('finish', { pct, wrong: wrong.length, retry: exam.isRetry });
   if (pct === 100) confetti(fullBank ? 90 : 45);
   if (!exam.isRetry) saveResult({ studentName: SID, gender: setup.gender || 'none', scope: setup.mode === 'sim' ? 'SIM' : setup.scope, scopeLabel: modeLabel,
-    difficulty: (setup.mode === 'custom' || setup.mode === 'mcq' || setup.mode === 'qb') ? setup.diff : 'mixed', score: exam.score, total, percentage: pct, durationSec: dur });
+    difficulty: (setup.mode === 'custom' || setup.mode === 'mcq' || setup.mode === 'qb' || setup.mode === 'noname') ? setup.diff : 'mixed', score: exam.score, total, percentage: pct, durationSec: dur });
 }
 $('retryWrongBtn').onclick = () => { if (exam && exam.wrong && exam.wrong.length) startExam(exam.wrong); };
 $('reviewToggle').onclick = () => { const h = $('reviewList').classList.toggle('hidden'); $('reviewToggle').textContent = h ? 'Review answers' : 'Hide review'; };
@@ -1370,7 +1380,7 @@ function resumeClear() {
   try { localStorage.removeItem('orgc_resume'); } catch {}
   renderResume();
 }
-const RES_MODE = { custom: 'Custom practice', mcq: 'MCQ only', essay: 'Short-answer only', sim: 'Exam simulation', qb: 'Question Bank' };
+const RES_MODE = { custom: 'Custom practice', mcq: 'MCQ only', essay: 'Short-answer only', sim: 'Exam simulation', qb: 'Question Bank', name: 'Nomenclature only', noname: 'Without nomenclature' };
 function renderResume() {
   const r = resumeGet(), box = $('resumeBox'); if (!box) return;
   if (!r || !r.qs || !r.qs.length) { box.classList.add('hidden'); return; }
