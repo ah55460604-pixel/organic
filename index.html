@@ -292,11 +292,13 @@
 <div id="homeBox" class="hidden fixed inset-0 z-50 grid place-items-center p-4" style="background:var(--overlay)">
   <div class="panel w-full max-w-sm p-6 text-center pop">
     <div class="text-4xl">🏠</div>
-    <div class="ar font-bold text-lg mt-2">ترجع للشاشة الرئيسية؟</div>
-    <p class="ar text-sm muted mt-2 leading-relaxed">💾 الامتحان هيتحفظ زي ما هو، وتقدر تكمّله بعدين من الشاشة الرئيسية، حتى من جهاز تاني لو مربوط بكود المزامنة.</p>
-    <div class="grid grid-cols-2 gap-3 mt-5">
-      <button id="homeNo" type="button" class="btn btn-ghost ar">لا، هكمّل</button>
-      <button id="homeYes" type="button" class="btn btn-acc ar">احفظ واطلع</button>
+    <div class="ar font-bold text-lg mt-2">هتطلع من الامتحان؟</div>
+    <p class="ar text-sm muted mt-2 leading-relaxed">تحب تحفظه وتكمّله بعدين من الشاشة الرئيسية؟</p>
+    <p id="homeOld" class="hidden ar text-xs mt-2" style="color:var(--amber)">⚠️ عندك امتحان تاني محفوظ، هيتحفظ ده مكانه</p>
+    <div class="grid gap-2.5 mt-5">
+      <button id="homeYes" type="button" class="btn btn-acc ar">💾 احفظ واطلع</button>
+      <button id="homeNoSave" type="button" class="btn btn-ghost ar">اطلع من غير حفظ</button>
+      <button id="homeNo" type="button" class="ar text-sm muted underline underline-offset-4 mt-1">لا، هكمّل</button>
     </div>
   </div>
 </div>
@@ -1023,7 +1025,6 @@ function startExam(retryQs) {
   showView('exam'); renderQuestion(); SFX.play('start');
   const n = setup.name;
   if (window.inloEvt) inloEvt('start', isRetry);
-  resumeSave();
   const wN = isRetry ? 0 : buildExam.weakN || 0;
   toast(isRetry ? `يلا نصلّح اللي فات${YA(n)} ${G('💪', '🌸')}` : wN ? `بسم الله 🤍 هبدأ${G('لك', 'لِك')} بـ ${wN} ${wN > 10 ? 'سؤال' : wN > 2 ? 'أسئلة' : 'سؤال'} كنت${G('', 'ي')} بت${G('غلط', 'غلطي')} فيهم 💪` : `بسم الله، بالتوفيق${YA(n)} ${G('🤍', '💖')}`);
 }
@@ -1085,7 +1086,7 @@ function record(ok, extra) {
   const prev = exam.streak;
   if (ok) { exam.score++; exam.streak++; exam.best = Math.max(exam.best, exam.streak); }
   else exam.streak = 0;
-  exam.answers.push({ q, ok, ...extra }); statAdd(q, ok); resumeSave();
+  exam.answers.push({ q, ok, ...extra }); statAdd(q, ok);
   $('liveScore').textContent = exam.score; $('streak').textContent = exam.streak;
   const n = setup.name;
   if (ok && STREAKS[exam.streak]) setTimeout(() => SFX.play('streak'), 280);
@@ -1215,7 +1216,7 @@ function renderWeak() {
 }
 function finishExam() {
   clearInterval(timerInt);
-  exam.finished = true; resumeClear();
+  exam.finished = true; if (exam.fromResume) resumeClear();
   const total = exam.qs.length, pct = Math.round((exam.score / total) * 1000) / 10;
   const dur = Math.floor((Date.now() - exam.start) / 1000), n = setup.name, s = scopeOf(setup.scope);
   const fullBank = !exam.isRetry && (setup.mode === 'custom' || setup.mode === 'mcq' || setup.mode === 'qb') && setup.scope === 'ALL' && total === poolFor('ALL').length && exam.score === total;
@@ -1354,22 +1355,20 @@ $('adminLogout').onclick = async () => {
 
 logVisit();
 ['homeBox', 'resetBox'].forEach(id => { const el = $(id); if (el) document.body.appendChild(el); });
-$('homeBtn').onclick = () => { if (exam && exam.answers && exam.answers.length) $('homeBox').classList.remove('hidden'); else goHome(); };
-function goHome() { if (exam && !exam.finished) resumeSave(); $('homeBox').classList.add('hidden'); clearInterval(timerInt); if (exam) { exam.done = true; exam.left = true; } showView('setup'); renderSetup(); }
-const RES_KEY = 'orgc_resume';
-function resumeGet() { try { return JSON.parse(localStorage.getItem(RES_KEY) || 'null'); } catch { return null; } }
+$('homeBtn').onclick = () => { if (exam && exam.answers && exam.answers.length) { const o = resumeGet(); $('homeOld').classList.toggle('hidden', !(o && !exam.fromResume)); $('homeBox').classList.remove('hidden'); } else goHome(); };
+function goHome(save) { if (save === true && exam && !exam.finished) { resumeSave(); toast('💾 اتحفظ — تقدر تكمّله من هنا'); } $('homeBox').classList.add('hidden'); clearInterval(timerInt); if (exam) { exam.done = true; exam.left = true; } showView('setup'); renderSetup(); }
+function resumeGet() { try { return JSON.parse(localStorage.getItem('orgc_resume') || 'null'); } catch { return null; } }
 function resumeSave() {
   if (!exam || exam.finished || exam.left) return;
   const r = { t: Date.now(), setup: { mode: setup.mode, scope: setup.scope, count: setup.count, diff: setup.diff, source: setup.source },
     qs: exam.qs.map(q => ({ id: q.id, ix: q.type === 'mcq' ? q.opts.map(t => q.o.indexOf(t)) : null })),
     ans: exam.answers.map(a => ({ ok: a.ok ? 1 : 0, c: a.chosen ?? null, w: a.written || '' })),
     score: exam.score, el: Date.now() - exam.start, streak: exam.streak, best: exam.best, retry: exam.isRetry ? 1 : 0 };
-  try { localStorage.setItem(RES_KEY, JSON.stringify(r)); localStorage.setItem(RES_KEY + '_t', String(r.t)); } catch {}
-  if (window.syncSoon) syncSoon();
+  try { localStorage.setItem('orgc_resume', JSON.stringify(r)); } catch {}
 }
 function resumeClear() {
-  try { localStorage.removeItem(RES_KEY); localStorage.setItem(RES_KEY + '_t', String(Date.now())); } catch {}
-  if (window.syncSoon) syncSoon();
+  try { localStorage.removeItem('orgc_resume'); } catch {}
+  renderResume();
 }
 const RES_MODE = { custom: 'Custom practice', mcq: 'MCQ only', essay: 'Short-answer only', sim: 'Exam simulation', qb: 'Question Bank' };
 function renderResume() {
@@ -1393,7 +1392,7 @@ function resumeExam() {
     return { ...q, opts: idx.map(i => q.o[i]), oaS: q.oa ? idx.map(i => q.oa[i]) : null, ans: idx.indexOf(q.a) };
   });
   exam = { qs, isRetry: !!r.retry, i: 0, score: r.score || 0, answers: r.ans.map((a, j) => ({ q: qs[j], ok: !!a.ok, chosen: a.c, written: a.w })),
-           start: Date.now() - (r.el || 0), selected: null, done: false, streak: r.streak || 0, best: r.best || 0, saved: false };
+           start: Date.now() - (r.el || 0), selected: null, done: false, streak: r.streak || 0, best: r.best || 0, saved: false, fromResume: true };
   $('qTotal').textContent = qs.length; $('liveScore').textContent = exam.score; $('streak').textContent = exam.streak;
   clearInterval(timerInt);
   timerInt = setInterval(() => { $('timer').textContent = fmtTime(Math.floor((Date.now() - exam.start) / 1000)); }, 1000);
@@ -1408,12 +1407,11 @@ function resumeExam() {
 }
 $('resumeGo').onclick = resumeExam;
 $('resumeX').onclick = () => { $('resumeBox').classList.add('hidden'); resumeClear(); };
-addEventListener('pagehide', () => { if (exam && !exam.finished && !exam.left && !$('view-exam').classList.contains('hidden-view')) resumeSave(); });
-document.addEventListener('visibilitychange', () => { if (document.hidden && exam && !exam.finished && !exam.left && !$('view-exam').classList.contains('hidden-view')) resumeSave(); });
 renderResume();
 $('navHome').onclick = () => { if (!$('view-exam').classList.contains('hidden-view')) $('homeBtn').click(); else goHome(); };
 $('homeNo').onclick = () => $('homeBox').classList.add('hidden');
-$('homeYes').onclick = goHome;
+$('homeYes').onclick = () => goHome(true);
+$('homeNoSave').onclick = () => { if (exam && exam.fromResume) resumeClear(); goHome(false); };
 $('homeBox').addEventListener('click', (e) => { if (e.target === $('homeBox')) $('homeBox').classList.add('hidden'); });
 $('resetBtn').onclick = () => $('resetBox').classList.remove('hidden');
 $('resetNo').onclick = () => $('resetBox').classList.add('hidden');
@@ -1433,8 +1431,7 @@ function syncNew() { const a = new Uint32Array(8); crypto.getRandomValues(a); re
 function syncLocal() {
   let st = {}; try { st = JSON.parse(localStorage.getItem(STAT_KEY) || '{}'); } catch {}
   let o = []; try { o = JSON.parse(localStorage.getItem('orgc_lastord') || '[]'); } catch {}
-  let r = null; try { r = JSON.parse(localStorage.getItem('orgc_resume') || 'null'); } catch {}
-  return { s: st, o, ot: +(localStorage.getItem('orgc_lastord_t') || 0), r, rt: +(localStorage.getItem('orgc_resume_t') || 0) };
+  return { s: st, o, ot: +(localStorage.getItem('orgc_lastord_t') || 0) };
 }
 function syncMerge(a, b) {
   const s = { ...(a.s || {}) };
@@ -1443,14 +1440,13 @@ function syncMerge(a, b) {
     const nu = (u[0] || 0) + (u[1] || 0), nv = (v[0] || 0) + (v[1] || 0);
     if (nv > nu || (nv === nu && (v[3] || 0) > (u[3] || 0))) s[k] = v;
   }
-  const ob = (b.ot || 0) > (a.ot || 0), rb = (b.rt || 0) > (a.rt || 0);
-  return { s, o: ob ? (b.o || []) : (a.o || []), ot: Math.max(a.ot || 0, b.ot || 0), r: rb ? (b.r || null) : (a.r || null), rt: Math.max(a.rt || 0, b.rt || 0) };
+  const ob = (b.ot || 0) > (a.ot || 0);
+  return { s, o: ob ? (b.o || []) : (a.o || []), ot: Math.max(a.ot || 0, b.ot || 0) };
 }
 function syncApply(m) {
-  try { localStorage.setItem(STAT_KEY, JSON.stringify(m.s || {})); localStorage.setItem('orgc_lastord', JSON.stringify(m.o || [])); localStorage.setItem('orgc_lastord_t', String(m.ot || 0));
-    if (m.r) localStorage.setItem('orgc_resume', JSON.stringify(m.r)); else localStorage.removeItem('orgc_resume'); localStorage.setItem('orgc_resume_t', String(m.rt || 0)); } catch {}
+  try { localStorage.setItem(STAT_KEY, JSON.stringify(m.s || {})); localStorage.setItem('orgc_lastord', JSON.stringify(m.o || [])); localStorage.setItem('orgc_lastord_t', String(m.ot || 0)); } catch {}
 }
-const syncSame = (a, b) => JSON.stringify(a.s) === JSON.stringify(b.s) && (a.ot || 0) === (b.ot || 0) && (a.rt || 0) === (b.rt || 0);
+const syncSame = (a, b) => JSON.stringify(a.s) === JSON.stringify(b.s) && (a.ot || 0) === (b.ot || 0);
 function syncMsg(t, ok) { const e = $('syncMsg'); if (e) { e.textContent = t; e.style.color = ok === false ? 'var(--rose)' : ok ? 'var(--okText)' : ''; } }
 let syncBusy = null, syncT = null, syncPulled = 0;
 async function syncRun(code) {
@@ -1458,24 +1454,24 @@ async function syncRun(code) {
   const ref = db.collection(SYNC_COL).doc(code);
   await db.runTransaction(async tx => {
     const d = await tx.get(ref), loc = syncLocal();
-    const rem = d.exists ? { s: d.data().s || {}, o: d.data().o || [], ot: d.data().ot || 0, r: d.data().r ? JSON.parse(d.data().r) : null, rt: d.data().rt || 0 } : { s: {}, o: [], ot: 0, r: null, rt: 0 };
+    const rem = d.exists ? { s: d.data().s || {}, o: d.data().o || [], ot: d.data().ot || 0 } : { s: {}, o: [], ot: 0 };
     const m = syncMerge(loc, rem);
     if (!syncSame(m, loc)) syncApply(m);
-    if (!d.exists || !syncSame(m, rem)) tx.set(ref, { s: m.s, o: m.o, ot: m.ot, r: m.r ? JSON.stringify(m.r) : '', rt: m.rt || 0, u: firebase.firestore.FieldValue.serverTimestamp() });
+    if (!d.exists || !syncSame(m, rem)) tx.set(ref, { s: m.s, o: m.o, ot: m.ot, u: firebase.firestore.FieldValue.serverTimestamp() });
   });
 }
 function syncNow() {
   const code = syncCode(); if (!syncOn() || !code) return Promise.resolve();
   if (syncBusy) return syncBusy.then(() => syncNow());
   syncMsg('⏳ بيتزامن…');
-  syncBusy = syncRun(code).then(() => { syncMsg('✓ متزامن', true); if (!$('view-setup').classList.contains('hidden-view')) { try { renderWeak(); } catch {} try { renderResume(); } catch {} } })
+  syncBusy = syncRun(code).then(() => { syncMsg('✓ متزامن', true); if (!$('view-setup').classList.contains('hidden-view')) { try { renderWeak(); } catch {} } })
     .catch(() => syncMsg('مش متصل دلوقتي — هيتزامن لما النت يرجع', false)).finally(() => { syncBusy = null; });
   return syncBusy;
 }
 window.syncSoon = () => { if (!syncOn()) return; clearTimeout(syncT); syncT = setTimeout(syncNow, 1500); };
 async function syncWipe() {
   const code = syncCode(); if (!syncOn() || !code) return;
-  try { await db.collection(SYNC_COL).doc(code).set({ s: {}, o: [], ot: 0, r: '', rt: Date.now(), u: firebase.firestore.FieldValue.serverTimestamp() }); } catch {}
+  try { await db.collection(SYNC_COL).doc(code).set({ s: {}, o: [], ot: 0, u: firebase.firestore.FieldValue.serverTimestamp() }); } catch {}
 }
 function syncInit() {
   if (!syncOn()) return;
