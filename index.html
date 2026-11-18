@@ -260,6 +260,20 @@
       <button id="startBtn" class="btn btn-acc text-lg px-8">Start exam →</button>
     </div>
   </div>
+  <div id="syncBox" class="hidden panel p-5 sm:p-6 mt-6 ar" dir="rtl" style="text-align:right">
+    <div class="flex items-center justify-between gap-4 flex-wrap">
+      <div><div class="font-bold text-base">☁️ كود المزامنة</div><div class="text-sm muted mt-0.5">اكتبه على أي جهاز تاني وتقدّمك هيكمل معاك</div></div>
+      <div class="flex items-center gap-2" dir="ltr"><span id="syncCode" class="font-mono text-xl font-bold" style="letter-spacing:.14em;color:var(--acc)">····-····</span><button id="syncCopy" type="button" class="chip">Copy</button></div>
+    </div>
+    <div class="flex items-center justify-between gap-3 flex-wrap mt-3 pt-3 border-t" style="border-color:var(--line)">
+      <button id="syncHave" type="button" class="text-sm underline underline-offset-4" style="color:var(--acc)">عندك كود من جهاز تاني؟</button>
+      <span id="syncMsg" class="text-xs muted"></span>
+    </div>
+    <div id="syncForm" class="hidden mt-3 flex items-center gap-2 flex-wrap" dir="ltr">
+      <input id="syncIn" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="9" placeholder="XXXX-XXXX" class="w-44 px-3 py-2 font-mono text-lg" style="letter-spacing:.12em;text-transform:uppercase">
+      <button id="syncGo" type="button" class="btn btn-acc px-5">ربط</button>
+    </div>
+  </div>
   <div class="text-center mt-6"><button id="resetBtn" type="button" class="ar text-sm muted underline underline-offset-4">🔄 ابدأ من الأول</button></div>
 </section>
 <div id="homeBox" class="hidden fixed inset-0 z-50 grid place-items-center p-4" style="background:var(--overlay)">
@@ -912,41 +926,80 @@ $('startBtn').onclick = () => {
 };
 $('bismillahBtn').onclick = () => startExam();
 
-function prepareQs(list) {
-  return shuffle(list).map(q => {
+function prepareQs(list) { return prepareQsKeep(shuffle(list)); }
+function prepareQsKeep(list) {
+  return list.map(q => {
     if (q.type !== 'mcq') return { ...q };
     const fixed = q.o.some(t => /all (of )?(the|these)|none of|above/i.test(t));
     const idx = fixed ? q.o.map((_, i) => i) : shuffle(q.o.map((_, i) => i));
     return { ...q, opts: idx.map(i => q.o[i]), oaS: q.oa ? idx.map(i => q.oa[i]) : null, ans: idx.indexOf(q.a) };
   });
 }
+function statsAll() { try { return JSON.parse(localStorage.getItem('orgc_stats') || '{}'); } catch { return {}; } }
+function weakScore(q, st) {
+  const v = st[String(q.id)]; if (!v || !v[1]) return 0;
+  return v[1] / (v[0] + v[1]) + (v[2] === 0 ? .25 : 0) + Math.min(v[1], 5) * .05;
+}
+function lastOrder() { try { return JSON.parse(localStorage.getItem('orgc_lastord') || '[]'); } catch { return []; } }
+function weakFirst(list, n) {
+  const st = statsAll(), prev = new Set(lastOrder());
+  const weak = [], rest = [];
+  for (const q of list) (weakScore(q, st) >= .45 ? weak : rest).push(q);
+  const w = shuffle(weak).sort((a, b) => Math.round(weakScore(b, st) * 4) - Math.round(weakScore(a, st) * 4));
+  const r = shuffle(rest).sort((a, b) => (prev.has(a.id) ? 1 : 0) - (prev.has(b.id) ? 1 : 0));
+  const out = [...w, ...r].slice(0, n == null ? list.length : n);
+  const k = Math.min(w.length, out.length);
+  return { qs: [...shuffle(out.slice(0, k)), ...shuffle(out.slice(k))], weak: k };
+}
+function freshOrder(qs, weakN) {
+  const prev = lastOrder();
+  const shuf = () => [...shuffle(qs.slice(0, weakN)), ...shuffle(qs.slice(weakN))];
+  let best = qs, bestS = Infinity;
+  for (let t = 0; t < 40; t++) {
+    const c = t ? shuf() : qs;
+    let same = 0; c.forEach((q, i) => { if (prev[i] === q.id) same++; });
+    const sc = same * 3 + (c[0] && prev[0] === c[0].id ? 50 : 0);
+    if (sc < bestS) { best = c; bestS = sc; } if (sc === 0) break;
+  }
+  try { localStorage.setItem('orgc_lastord', JSON.stringify(best.map(q => q.id))); localStorage.setItem('orgc_lastord_t', String(Date.now())); } catch {}
+  if (window.syncSoon) syncSoon();
+  return best;
+}
 function buildSimulation() {
   const seen = new Set(), mcq = [];
-  for (const q of shuffle(QUESTIONS.filter(q => q.src === 'bank' && q.type === 'mcq'))) {
+  for (const q of weakFirst(QUESTIONS.filter(q => q.src === 'bank' && q.type === 'mcq')).qs) {
     if (mcq.length >= SIM_MCQ) break; if (q.g && seen.has(q.g)) continue; if (q.g) seen.add(q.g); mcq.push(q);
   }
-  const essays = shuffle(QUESTIONS.filter(q => q.src === 'bank' && q.type === 'essay')).slice(0, SIM_ESSAY);
-  return [...prepareQs(mcq), ...prepareQs(essays)];
+  const essays = weakFirst(QUESTIONS.filter(q => q.src === 'bank' && q.type === 'essay')).qs.slice(0, SIM_ESSAY);
+  const st = statsAll(), wn = mcq.filter(q => weakScore(q, st) >= .45).length;
+  const m = freshOrder([...mcq.filter(q => weakScore(q, st) >= .45), ...mcq.filter(q => weakScore(q, st) < .45)], wn);
+  buildExam.weakN = wn;
+  return [...prepareQsKeep(m), ...prepareQsKeep(essays)];
 }
 function buildExam(scope, count, diff) {
   if (setup.mode === 'sim') return buildSimulation();
-  const pool = poolFor(scope);
-  if (count >= pool.length) return prepareQs(pool);
+  const pool = poolFor(scope), st = statsAll();
+  const fin = (list) => { const wn = list.filter(q => weakScore(q, st) >= .45); buildExam.weakN = wn.length; return prepareQsKeep(freshOrder([...wn, ...list.filter(q => weakScore(q, st) < .45)], wn.length)); };
+  if (count >= pool.length) return fin(pool);
   const order = { easy: ['easy','medium','hard'], medium: ['medium','easy','hard'], hard: ['hard','medium','easy'] }[diff];
   const rank = (q) => order.indexOf(q.diff);
+  const prevIds = new Set(lastOrder());
   const pick = (list, n) => { const seen = new Set(), out = [];
-    for (const q of shuffle(list).sort((a, b) => rank(a) - rank(b))) { if (out.length >= n) break; if (q.g && seen.has(q.g)) continue; if (q.g) seen.add(q.g); out.push(q); }
+    const wk = shuffle(list.filter(q => weakScore(q, st) >= .45)).sort((a, b) => Math.round(weakScore(b, st) * 4) - Math.round(weakScore(a, st) * 4));
+    const ot = shuffle(list.filter(q => weakScore(q, st) < .45)).sort((a, b) => (rank(a) - rank(b)) * 2 + ((prevIds.has(a.id) ? 1 : 0) - (prevIds.has(b.id) ? 1 : 0)));
+    for (const q of [...wk, ...ot]) { if (out.length >= n) break; if (q.g && seen.has(q.g)) continue; if (q.g) seen.add(q.g); out.push(q); }
     return out; };
   const bank = pool.filter(q => q.src !== 'lecture'), lec = pool.filter(q => q.src === 'lecture');
   let nLec = Math.min(lec.length, Math.max(count >= 7 ? 1 : 0, Math.round(count * LECTURE_SHARE)));
   let nBank = Math.min(bank.length, count - nLec);
   nLec = Math.min(lec.length, count - nBank);
-  return prepareQs([...pick(bank, nBank), ...pick(lec, nLec)]);
+  return fin([...pick(bank, nBank), ...pick(lec, nLec)]);
 }
 
 let exam = null, timerInt = null;
 function startExam(retryQs) {
   const isRetry = Array.isArray(retryQs);
+  buildExam.weakN = 0;
   exam = { qs: isRetry ? prepareQs(retryQs) : buildExam(setup.scope, setup.count, setup.diff), isRetry,
            i: 0, score: 0, answers: [], start: Date.now(), selected: null, done: false, streak: 0, best: 0, saved: false };
   $('qTotal').textContent = exam.qs.length; $('liveScore').textContent = '0'; $('streak').textContent = '0';
@@ -956,7 +1009,8 @@ function startExam(retryQs) {
   showView('exam'); renderQuestion(); SFX.play('start');
   const n = setup.name;
   if (window.inloEvt) inloEvt('start', isRetry);
-  toast(isRetry ? `يلا نصلّح اللي فات${YA(n)} ${G('💪', '🌸')}` : `بسم الله، بالتوفيق${YA(n)} ${G('🤍', '💖')}`);
+  const wN = isRetry ? 0 : buildExam.weakN || 0;
+  toast(isRetry ? `يلا نصلّح اللي فات${YA(n)} ${G('💪', '🌸')}` : wN ? `بسم الله 🤍 هبدأ${G('لك', 'لِك')} بـ ${wN} ${wN > 10 ? 'سؤال' : wN > 2 ? 'أسئلة' : 'سؤال'} كنت${G('', 'ي')} بت${G('غلط', 'غلطي')} فيهم 💪` : `بسم الله، بالتوفيق${YA(n)} ${G('🤍', '💖')}`);
 }
 
 function qTagsHtml(q) {
@@ -1103,8 +1157,9 @@ $('nextBtn').onclick = () => {
 const STAT_KEY = 'orgc_stats';
 function statAdd(q, ok) {
   let st = {}; try { st = JSON.parse(localStorage.getItem(STAT_KEY) || '{}'); } catch {}
-  const k = String(q.id), v = st[k] || [0, 0]; v[ok ? 0 : 1]++; st[k] = v;
+  const k = String(q.id), v = st[k] || [0, 0]; v[ok ? 0 : 1]++; v[2] = ok ? 1 : 0; v[3] = Date.now(); st[k] = v;
   try { localStorage.setItem(STAT_KEY, JSON.stringify(st)); } catch {}
+  if (window.syncSoon) syncSoon();
 }
 function formOf(q) { const t = String(q.tag || ''); if (/^(Formative \d|Question Bank)/.test(t)) return t.split(' · ')[0]; if (q.type === 'essay') return 'Essay'; return 'Lecture questions'; }
 function weakStats() {
@@ -1292,11 +1347,100 @@ $('homeBox').addEventListener('click', (e) => { if (e.target === $('homeBox')) $
 $('resetBtn').onclick = () => $('resetBox').classList.remove('hidden');
 $('resetNo').onclick = () => $('resetBox').classList.add('hidden');
 $('resetBox').addEventListener('click', (e) => { if (e.target === $('resetBox')) $('resetBox').classList.add('hidden'); });
-$('resetYes').onclick = () => {
-  try { Object.keys(localStorage).filter(k => k.startsWith('orgc_') && k !== PENDING_KEY && k !== VISIT_KEY && k !== 'orgc_visits').forEach(k => localStorage.removeItem(k)); } catch {}
+$('resetYes').onclick = async () => {
+  try { Object.keys(localStorage).filter(k => k.startsWith('orgc_') && k !== PENDING_KEY && k !== VISIT_KEY && k !== 'orgc_visits' && k !== SYNC_KEY).forEach(k => localStorage.removeItem(k)); } catch {}
   try { sessionStorage.clear(); } catch {}
+  await Promise.race([syncWipe(), new Promise(r => setTimeout(r, 2500))]);
   location.replace(location.pathname);
 };
+
+const SYNC_COL = 'organic_sync', SYNC_KEY = 'orgc_sync', SYNC_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const syncOn = () => FB_ENABLED && !!db;
+const syncCode = () => { try { return localStorage.getItem(SYNC_KEY) || ''; } catch { return ''; } };
+const syncFmt = c => c ? c.slice(0, 4) + '-' + c.slice(4) : '····-····';
+function syncNew() { const a = new Uint32Array(8); crypto.getRandomValues(a); return [...a].map(x => SYNC_ABC[x % SYNC_ABC.length]).join(''); }
+function syncLocal() {
+  let st = {}; try { st = JSON.parse(localStorage.getItem(STAT_KEY) || '{}'); } catch {}
+  let o = []; try { o = JSON.parse(localStorage.getItem('orgc_lastord') || '[]'); } catch {}
+  return { s: st, o, ot: +(localStorage.getItem('orgc_lastord_t') || 0) };
+}
+function syncMerge(a, b) {
+  const s = { ...(a.s || {}) };
+  for (const [k, v] of Object.entries(b.s || {})) {
+    const u = s[k]; if (!u) { s[k] = v; continue; }
+    const nu = (u[0] || 0) + (u[1] || 0), nv = (v[0] || 0) + (v[1] || 0);
+    if (nv > nu || (nv === nu && (v[3] || 0) > (u[3] || 0))) s[k] = v;
+  }
+  const ob = (b.ot || 0) > (a.ot || 0);
+  return { s, o: ob ? (b.o || []) : (a.o || []), ot: Math.max(a.ot || 0, b.ot || 0) };
+}
+function syncApply(m) {
+  try { localStorage.setItem(STAT_KEY, JSON.stringify(m.s || {})); localStorage.setItem('orgc_lastord', JSON.stringify(m.o || [])); localStorage.setItem('orgc_lastord_t', String(m.ot || 0)); } catch {}
+}
+const syncSame = (a, b) => JSON.stringify(a.s) === JSON.stringify(b.s) && (a.ot || 0) === (b.ot || 0);
+function syncMsg(t, ok) { const e = $('syncMsg'); if (e) { e.textContent = t; e.style.color = ok === false ? 'var(--rose)' : ok ? 'var(--okText)' : ''; } }
+let syncBusy = null, syncT = null, syncPulled = 0;
+async function syncRun(code) {
+  if (!syncOn() || !code) return;
+  const ref = db.collection(SYNC_COL).doc(code);
+  await db.runTransaction(async tx => {
+    const d = await tx.get(ref), loc = syncLocal();
+    const rem = d.exists ? { s: d.data().s || {}, o: d.data().o || [], ot: d.data().ot || 0 } : { s: {}, o: [], ot: 0 };
+    const m = syncMerge(loc, rem);
+    if (!syncSame(m, loc)) syncApply(m);
+    if (!d.exists || !syncSame(m, rem)) tx.set(ref, { s: m.s, o: m.o, ot: m.ot, u: firebase.firestore.FieldValue.serverTimestamp() });
+  });
+}
+function syncNow() {
+  const code = syncCode(); if (!syncOn() || !code) return Promise.resolve();
+  if (syncBusy) return syncBusy.then(() => syncNow());
+  syncMsg('⏳ بيتزامن…');
+  syncBusy = syncRun(code).then(() => { syncMsg('✓ متزامن', true); if (window.renderWeak && !$('view-setup').classList.contains('hidden-view')) try { renderWeak(); } catch {} })
+    .catch(() => syncMsg('مش متصل دلوقتي — هيتزامن لما النت يرجع', false)).finally(() => { syncBusy = null; });
+  return syncBusy;
+}
+window.syncSoon = () => { if (!syncOn()) return; clearTimeout(syncT); syncT = setTimeout(syncNow, 1500); };
+async function syncWipe() {
+  const code = syncCode(); if (!syncOn() || !code) return;
+  try { await db.collection(SYNC_COL).doc(code).set({ s: {}, o: [], ot: 0, u: firebase.firestore.FieldValue.serverTimestamp() }); } catch {}
+}
+function syncInit() {
+  if (!syncOn()) return;
+  let code = syncCode();
+  if (!code) { code = syncNew(); try { localStorage.setItem(SYNC_KEY, code); } catch {} }
+  $('syncCode').textContent = syncFmt(code); $('syncBox').classList.remove('hidden');
+  syncNow();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - syncPulled > 20000) { syncPulled = Date.now(); syncNow(); } });
+}
+$('syncCopy').onclick = async () => {
+  const t = syncFmt(syncCode());
+  try { await navigator.clipboard.writeText(t); } catch { const i = document.createElement('textarea'); i.value = t; document.body.appendChild(i); i.select(); try { document.execCommand('copy'); } catch {} i.remove(); }
+  $('syncCopy').textContent = 'Copied ✓'; setTimeout(() => $('syncCopy').textContent = 'Copy', 1600);
+};
+$('syncHave').onclick = () => { $('syncForm').classList.toggle('hidden'); if (!$('syncForm').classList.contains('hidden')) $('syncIn').focus(); };
+$('syncIn').addEventListener('input', () => {
+  const c = $('syncIn').value.toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/[O0]/g, 'Q').replace(/[I1L]/g, 'J').slice(0, 8);
+  $('syncIn').value = c.length > 4 ? c.slice(0, 4) + '-' + c.slice(4) : c;
+});
+$('syncIn').addEventListener('keydown', e => { if (e.key === 'Enter') $('syncGo').click(); });
+$('syncGo').onclick = async () => {
+  const c = $('syncIn').value.replace(/-/g, '');
+  if (c.length !== 8 || [...c].some(ch => !SYNC_ABC.includes(ch))) return syncMsg('الكود 8 حروف وأرقام، زي K7QA-29XM', false);
+  if (c === syncCode()) return syncMsg('ده نفس كود الجهاز ده 🙂', true);
+  $('syncGo').disabled = true; syncMsg('⏳ بدوّر على الكود…');
+  try {
+    const d = await db.collection(SYNC_COL).doc(c).get();
+    if (!d.exists) { syncMsg('الكود ده مش موجود، اتأكد منه', false); return; }
+    try { localStorage.setItem(SYNC_KEY, c); } catch {}
+    await syncNow();
+    $('syncCode').textContent = syncFmt(c); $('syncForm').classList.add('hidden'); $('syncIn').value = '';
+    syncMsg('✓ اتربط! تقدمك من الجهاز التاني اتضاف هنا', true);
+    try { renderWeak(); } catch {}
+    toast('☁️ اتربط الجهاز ده بكودك ✓');
+  } catch { syncMsg('مش قادر أوصل للسيرفر دلوقتي، جرّب تاني', false); }
+  finally { $('syncGo').disabled = false; }
+};
+syncInit();
 $('soundBtn').textContent = SFX.on ? '🔊' : '🔇';
 $('soundBtn').onclick = () => { SFX.set(!SFX.on); $('soundBtn').textContent = SFX.on ? '🔊' : '🔇'; SFX.play('pop'); };
 applyTheme();
